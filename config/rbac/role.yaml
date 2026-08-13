@@ -1,0 +1,32 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - quay.io
+  resources:
+  - organizations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - quay.io
+  resources:
+  - organizations/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - quay.io
+  resources:
+  - organizations/status
+  verbs:
+  - get
+  - patch
+  - update
