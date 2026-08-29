@@ -57,6 +57,10 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
+      hostAliases:
+        - ip: "192.168.1.202"
+          hostnames:
+            - "quay.lan"
       containers:
       - command:
         - /manager
@@ -64,6 +68,7 @@ spec:
           - --leader-elect
           - --health-probe-bind-address=:8081
         image: quay.lan:8080/quay-crd/quay-operator:v1alpha
+        imagePullPolicy: Always
         name: manager
         ports:
         - containerPort: 8081

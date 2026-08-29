@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.21.0
-  name: organizations.quay.io
+  name: quayconfigs.quay.io
 spec:
   group: quay.io
   names:
-    kind: Organization
-    listKind: OrganizationList
-    plural: organizations
-    singular: organization
+    kind: QuayConfig
+    listKind: QuayConfigList
+    plural: quayconfigs
+    singular: quayconfig
   scope: Namespaced
   versions:
   - name: v1alpha
     schema:
       openAPIV3Schema:
-        description: Organization is the Schema for the organizations API
+        description: QuayConfig is the Schema for the QuayConfig API
         properties:
           apiVersion:
             description: |-
@@ -37,12 +37,29 @@ spec:
           metadata:
             type: object
           spec:
-            description: spec defines the desired state of Organization
+            description: spec defines the desired state of QuayConfig
+            properties:
+              credentials:
+                properties:
+                  key:
+                    type: string
+                  name:
+                    type: string
+                required:
+                - key
+                - name
+                type: object
+              url:
+                type: string
+            required:
+            - credentials
+            - url
             type: object
           status:
-            description: status defines the observed state of Organization
+            description: status defines the observed state of QuayConfig
             properties:
               conditions:
+                description: Conditions represent the current state of the QuayConfig.
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -98,6 +115,11 @@ spec:
                   - type
                   type: object
                 type: array
+              ready:
+                description: Ready indicates whether the Quay API can be reached.
+                type: boolean
+            required:
+            - ready
             type: object
         required:
         - spec

@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	quayiov1alpha1 "quay-crd/api/v1alpha"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -27,9 +26,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	quayiov1alpha "quay-crd/api/v1alpha"
 )
 
-var _ = Describe("Organization Controller", func() {
+var _ = Describe("Quayconfig Controller", func() {
 	Context("When reconciling a resource", func() {
 		const (
 			resourceName      = "test-resource"
@@ -42,13 +43,13 @@ var _ = Describe("Organization Controller", func() {
 			Name:      resourceName,
 			Namespace: resourceNamespace,
 		}
-		organization := &quayiov1alpha1.Organization{}
+		quayconfig := &quayiov1alpha.Quayconfig{}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind Organization")
-			err := k8sClient.Get(ctx, typeNamespacedName, organization)
+			By("creating the custom resource for the Kind Quayconfig")
+			err := k8sClient.Get(ctx, typeNamespacedName, quayconfig)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &quayiov1alpha1.Organization{
+				resource := &quayiov1alpha.Quayconfig{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: resourceNamespace,
@@ -61,16 +62,16 @@ var _ = Describe("Organization Controller", func() {
 
 		AfterEach(func() {
 			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &quayiov1alpha1.Organization{}
+			resource := &quayiov1alpha.Quayconfig{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Cleanup the specific resource instance Organization")
+			By("Cleanup the specific resource instance Quayconfig")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
-			controllerReconciler := &OrganizationReconciler{
+			controllerReconciler := &QuayconfigReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}

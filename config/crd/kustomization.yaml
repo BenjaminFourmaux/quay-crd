@@ -3,6 +3,7 @@
 # It should be run by config/default
 resources:
 - bases/quay.io_organizations.yaml
+- bases/quay.io_quayconfigs.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

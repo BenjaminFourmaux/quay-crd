@@ -5,9 +5,18 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - quay.io
   resources:
   - organizations
+  - quayconfigs
   verbs:
   - create
   - delete
@@ -20,12 +29,14 @@ rules:
   - quay.io
   resources:
   - organizations/finalizers
+  - quayconfigs/finalizers
   verbs:
   - update
 - apiGroups:
   - quay.io
   resources:
   - organizations/status
+  - quayconfigs/status
   verbs:
   - get
   - patch

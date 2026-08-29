@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"os"
+	"quay-crd/internal/services"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -35,7 +36,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	quayiov1alpha1 "quay-crd/api/v1alpha1"
+	quayiov1alpha "quay-crd/api/v1alpha"
 	"quay-crd/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
@@ -48,7 +49,8 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(quayiov1alpha1.AddToScheme(scheme))
+	utilruntime.Must(quayiov1alpha.AddToScheme(scheme))
+	utilruntime.Must(quayiov1alpha.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -175,6 +177,18 @@ func main() {
 	})
 	if err != nil {
 		setupLog.Error(err, "Failed to start manager")
+		os.Exit(1)
+	}
+
+	// Prepare Services registration
+	configService := services.NewConfigService(mgr.GetClient())
+
+	if err := (&controller.QuayConfigReconciler{
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+		ConfigService: configService,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "Failed to create controller", "controller", "quayconfig")
 		os.Exit(1)
 	}
 

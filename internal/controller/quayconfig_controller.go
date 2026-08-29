@@ -18,58 +18,61 @@ package controller
 
 import (
 	"context"
-	quayiov1alpha1 "quay-crd/api/v1alpha"
+	"quay-crd/internal/services"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+
+	quayiov1alpha "quay-crd/api/v1alpha"
 )
 
-// OrganizationReconciler reconciles a Organization object
-type OrganizationReconciler struct {
+// QuayConfigReconciler reconciles a QuayConfig object
+type QuayConfigReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme        *runtime.Scheme
+	ConfigService *services.ConfigService
 }
 
-// +kubebuilder:rbac:groups=quay.io,resources=organizations,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=quay.io,resources=organizations/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=quay.io,resources=organizations/finalizers,verbs=update
+// +kubebuilder:rbac:groups=quay.io,resources=quayconfigs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=quay.io,resources=quayconfigs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=quay.io,resources=quayconfigs/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the Organization object against the actual cluster state, and then
+// the Quayconfig object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.24.1/pkg/reconcile
-func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *QuayConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
 
-	// TODO(user): your logic here
-	logf.Log.Info("Coucou")
+	var quayConfig quayiov1alpha.QuayConfig
 
-	// 1. Get the Organization from Kubernetes manifest
-	var org quayiov1alpha1.Organization
-
-	err := r.Get(ctx, req.NamespacedName, &org)
-	if err != nil {
-		return ctrl.Result{}, err
+	if err := r.Get(ctx, req.NamespacedName, &quayConfig); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	logf.Log.Info("Successfully retrieved Organization", "name", org.Name)
-
-	// 2. call service
+	err := r.ConfigService.Reconcile(ctx, &quayConfig)
+	if err != nil {
+		return ctrl.Result{
+			RequeueAfter: 30 * time.Second,
+		}, err
+	}
 
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *OrganizationReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *QuayConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&quayiov1alpha1.Organization{}).
-		Named("organization").
+		For(&quayiov1alpha.QuayConfig{}).
+		Named("quayconfig").
 		Complete(r)
 }

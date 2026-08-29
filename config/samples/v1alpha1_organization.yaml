@@ -1,9 +1,8 @@
-apiVersion: quay.io/v1alpha1
+apiVersion: quay.io/v1alpha
 kind: Organization
 metadata:
   labels:
     app.kubernetes.io/name: quay-crd
     app.kubernetes.io/managed-by: kustomize
   name: organization-sample
-spec:
-  name: bigcorp
+spec: {}

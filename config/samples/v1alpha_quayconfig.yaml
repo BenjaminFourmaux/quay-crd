@@ -1,0 +1,14 @@
+apiVersion: quay.io/v1alpha
+kind: QuayConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: quay-crd
+    app.kubernetes.io/managed-by: kustomize
+  name: quayconfig-sample
+spec:
+  # TODO(user): Add fields here
+  #url: "https://quay.example.com"
+  url: "http://quay.lan:8080"
+  credentials:
+    name: "quay-credentials"
+    key: "token"
