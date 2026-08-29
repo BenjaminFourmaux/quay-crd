@@ -7,11 +7,6 @@ import (
 
 // OrganizationSpec defines the desired state of Organization
 type OrganizationSpec struct {
-	// Name of the Quay organization
-	Name string `json:"name"`
-
-	// Description of the Quay organization
-	Description *string `json:"description,omitempty"`
 }
 
 // OrganizationStatus defines the observed state of Organization.

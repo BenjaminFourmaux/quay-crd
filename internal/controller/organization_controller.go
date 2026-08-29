@@ -50,6 +50,19 @@ func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	_ = logf.FromContext(ctx)
 
 	// TODO(user): your logic here
+	logf.Log.Info("Coucou")
+
+	// 1. Get the Organization from Kubernetes manifest
+	var org quayiov1alpha1.Organization
+
+	err := r.Get(ctx, req.NamespacedName, &org)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	logf.Log.Info("Successfully retrieved Organization", "name", org.Name)
+
+	// 2. call service
 
 	return ctrl.Result{}, nil
 }

@@ -16,7 +16,7 @@
 **Build and push your image to the location specified by `IMG`:**
 
 ```sh
-make docker-build docker-push IMG=<some-registry>/quay-crd:tag
+BUILDX_NO_DEFAULT_ATTESTATIONS=1 make docker-build docker-push IMG=<some-registry>/quay-crd:tag
 ```
 
 **NOTE:** This image ought to be published in the personal registry you specified.
