@@ -1,11 +1,17 @@
 package quay
 
+// <editor-fold desc="Common models"
+
 type Avatar struct {
 	Name  string `json:"name"`
 	Hash  string `json:"hash"`
 	Color string `json:"color"`
 	Kind  string `json:"kind"`
 }
+
+// </editor-fold>
+
+// <editor-fold desc="User models">
 
 type User struct {
 	Anonymous           bool           `json:"anonymous"`
@@ -31,6 +37,10 @@ type User struct {
 	SuperUser           bool           `json:"superuser"`
 }
 
+// </editor-fold>
+
+// <editor-fold desc="Organization models>
+
 type Organization struct {
 	Name                string  `json:"name"`
 	Email               string  `json:"email,omitempty"`
@@ -53,6 +63,10 @@ type UpdateOrganization struct {
 	TagExpirationS int    `json:"tag_expiration_s"`
 }
 
+// </editor-fold>
+
+// <editor-fold desc="Team models">
+
 type Team struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -63,3 +77,18 @@ type Team struct {
 	MemberCount int    `json:"member_count"`
 	IsSynced    bool   `json:"is_synced"`
 }
+
+type UpdateTeam struct {
+	Role        string `json:"role"`        // Role of the team
+	Description string `json:"description"` // Description of the team
+}
+
+type Member struct {
+	Name    string `json:"name"`
+	Kind    string `json:"kind"` // Kind of the member. Can be 'user' or 'robot'
+	IsRobot bool   `json:"is_robot"`
+	Avatar  Avatar `json:"avatar"`
+	Invited bool   `json:"invited"`
+}
+
+// </editor-fold>

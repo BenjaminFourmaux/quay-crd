@@ -59,3 +59,17 @@ func ParseOrganization(body []byte) (Organization, error) {
 
 	return org, nil
 }
+
+func ParseMembers(body []byte) ([]Member, error) {
+	var rawMembers struct {
+		Name    string   `json:"name"`
+		Members []Member `json:"members"`
+		CanEdit bool     `json:"can_edit"`
+	}
+
+	if err := json.Unmarshal(body, &rawMembers); err != nil {
+		return []Member{}, err
+	}
+
+	return rawMembers.Members, nil
+}

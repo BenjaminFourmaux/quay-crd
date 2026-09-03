@@ -73,7 +73,7 @@ func (c *Client) UpdateOrganization(orgname string, orgToUpdate *UpdateOrganizat
 		return Organization{}, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, c.BaseURL+"/api/"+c.APIVersion+"/organization/"+orgname, bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPut, c.BaseURL+"/api/"+c.APIVersion+"/organization/"+orgname, bytes.NewBuffer(body))
 	if err != nil {
 		return Organization{}, err
 	}
