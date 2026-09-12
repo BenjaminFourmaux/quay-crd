@@ -18,7 +18,11 @@ package controller
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	quayiov1alpha1 "quay-crd/api/v1alpha"
+	"quay-crd/internal/services/quay"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -56,7 +60,7 @@ func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	err := r.Get(ctx, req.NamespacedName, &org)
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	logf.Log.Info("Successfully retrieved Organization", "name", org.Name)
@@ -64,6 +68,90 @@ func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	// 2. call service
 
 	return ctrl.Result{}, nil
+}
+
+func (r *OrganizationReconciler) setNotReady(
+	ctx context.Context,
+	org *quayiov1alpha1.Organization,
+	reason string,
+	message string,
+) error {
+	meta.SetStatusCondition(&org.Status.Conditions, metav1.Condition{
+		Type:               "Ready",
+		Status:             metav1.ConditionFalse,
+		Reason:             reason,
+		Message:            message,
+		LastTransitionTime: metav1.Now(),
+	})
+
+	err := r.Status().Update(ctx, org)
+	if errors.IsNotFound(err) {
+		return nil
+	}
+	return err
+}
+
+func (r *OrganizationReconciler) setReady(
+	ctx context.Context,
+	org *quayiov1alpha1.Organization,
+	reason string,
+	message string,
+) error {
+	meta.SetStatusCondition(&org.Status.Conditions, metav1.Condition{
+		Type:               "Ready",
+		Status:             metav1.ConditionTrue,
+		Reason:             reason,
+		Message:            message,
+		LastTransitionTime: metav1.Now(),
+	})
+
+	err := r.Status().Update(ctx, org)
+	if errors.IsNotFound(err) {
+		return nil
+	}
+	return err
+}
+
+func conditionFromQuayError(err error) (string, string) {
+	apiErr, ok := err.(*quay.APIError)
+	if !ok {
+		return "QuayRequestFailed", err.Error()
+	}
+
+	reason := "QuayInvalidRequest"
+	if apiErr.ErrorType != "" {
+		reason = "Quay" + toReasonPart(apiErr.ErrorType)
+	}
+
+	message := apiErr.Detail
+	if message == "" {
+		message = apiErr.ErrorMessage
+	}
+	if message == "" {
+		message = apiErr.Error()
+	}
+
+	return reason, message
+}
+
+func toReasonPart(input string) string {
+	result := make([]rune, 0, len(input))
+	capitalizeNext := true
+	for _, r := range input {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			if capitalizeNext && r >= 'a' && r <= 'z' {
+				r = r - 'a' + 'A'
+			}
+			result = append(result, r)
+			capitalizeNext = false
+			continue
+		}
+		capitalizeNext = true
+	}
+	if len(result) == 0 {
+		return "RequestFailed"
+	}
+	return string(result)
 }
 
 // SetupWithManager sets up the controller with the Manager.
