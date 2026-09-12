@@ -8,7 +8,7 @@ import (
 // OrganizationSpec defines the desired state of Organization
 type OrganizationSpec struct {
 	Email          *string `json:"email,omitempty"`
-	InvoiceEmail   *string `json:"invoice_email,omitempty"`
+	InvoiceEmail   *bool   `json:"invoice_email,omitempty"`
 	TagExpirationS *int    `json:"tag_expiration_s,omitempty"`
 }
 

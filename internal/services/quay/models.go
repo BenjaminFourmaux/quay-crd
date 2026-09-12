@@ -59,9 +59,9 @@ type CreateOrganization struct {
 }
 
 type UpdateOrganization struct {
-	Email          string `json:"email"`
-	InvoiceEmail   string `json:"invoice_email"`
-	TagExpirationS int    `json:"tag_expiration_s"`
+	Email          *string `json:"email,omitempty"`
+	InvoiceEmail   *bool   `json:"invoice_email,omitempty"`
+	TagExpirationS *int    `json:"tag_expiration_s,omitempty"`
 }
 
 // </editor-fold>

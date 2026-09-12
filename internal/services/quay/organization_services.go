@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func (c *Client) CreateOrganization(orgToCreate *CreateOrganization) (Organization, error) {
@@ -19,12 +20,18 @@ func (c *Client) CreateOrganization(orgToCreate *CreateOrganization) (Organizati
 		return Organization{}, err
 	}
 
+	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
+
 	req.Header.Set("Authorization", "Bearer "+c.Token)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return Organization{}, err
 	}
+
+	logf.Log.Info("[Quay] Request response", "status", resp.Status)
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
@@ -41,12 +48,16 @@ func (c *Client) GetOrganization(name string) (Organization, error) {
 		return Organization{}, err
 	}
 
+	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
+
 	req.Header.Set("Authorization", "Bearer "+c.Token)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return Organization{}, err
 	}
+
+	logf.Log.Info("[Quay] Request response", "status", resp.Status)
 
 	defer resp.Body.Close()
 
@@ -78,15 +89,21 @@ func (c *Client) UpdateOrganization(orgname string, orgToUpdate *UpdateOrganizat
 		return Organization{}, err
 	}
 
+	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
+
 	req.Header.Set("Authorization", "Bearer "+c.Token)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return Organization{}, err
 	}
+
+	logf.Log.Info("[Quay] Request response", "status", resp.Status)
+
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated {
+	if resp.StatusCode != http.StatusOK {
 		return Organization{}, parseAPIError(resp)
 	} else {
 		// Get the updated org
@@ -99,12 +116,17 @@ func (c *Client) DeleteOrganization(orgname string) error {
 	if err != nil {
 		return err
 	}
+
+	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
+
 	req.Header.Set("Authorization", "Bearer "+c.Token)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
+
+	logf.Log.Info("[Quay] Request response", "status", resp.Status)
 
 	defer resp.Body.Close()
 

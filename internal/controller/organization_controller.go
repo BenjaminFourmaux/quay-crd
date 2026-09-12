@@ -53,10 +53,9 @@ type OrganizationReconciler struct {
 func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
 
-	// TODO(user): your logic here
-	logf.Log.Info("Coucou")
+	logf.Log.Info("[Organization Controller] Reconcile")
 
-	// 1. Get the Organization from Kubernetes manifest
+	// Get the Organization from Kubernetes manifest
 	var org quayiov1alpha1.Organization
 
 	err := r.Get(ctx, req.NamespacedName, &org)
@@ -64,14 +63,26 @@ func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	logf.Log.Info("Successfully retrieved Organization", "name", org.Name)
+	logf.Log.Info("[Organization Controller] Successfully retrieved Organization", "name", org.Name)
 
-	// 2. Call service
-	err = r.OrganizationService.Reconcile(ctx, &org)
+	// Call service
+	// Resource being deleted
+	if !org.ObjectMeta.DeletionTimestamp.IsZero() {
+		err = r.OrganizationService.Delete(ctx, &org)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	// Resource created or updated
+	needUpdate, err := r.OrganizationService.Reconcile(ctx, &org)
 	if err != nil {
 		return ctrl.Result{}, err
-	} else {
-		// Update CR manifest
+	}
+
+	// Update resource manifest
+	if needUpdate { // avoid double reconcile, or worse, AN INFINITE LOOP !!
 		if err = r.Update(ctx, &org); err != nil {
 			return ctrl.Result{}, err
 		}
