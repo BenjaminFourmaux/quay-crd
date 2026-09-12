@@ -50,6 +50,7 @@ type Organization struct {
 	Teams               []Team  `json:"teams"`
 	InvoiceEmail        bool    `json:"invoice_email"`
 	InvoiceEmailAddress *string `json:"invoice_email_address"`
+	TagExpirationS      int     `json:"tag_expiration_s"`
 	IsFreeAccount       bool    `json:"is_free_account"`
 }
 

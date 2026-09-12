@@ -21,10 +21,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	quayiov1alpha1 "quay-crd/api/v1alpha"
-	"quay-crd/internal/services/quay"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	quayiov1alpha1 "quay-crd/api/v1alpha"
+	"quay-crd/internal/services"
+	"quay-crd/internal/services/quay"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -33,7 +33,8 @@ import (
 // OrganizationReconciler reconciles a Organization object
 type OrganizationReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme              *runtime.Scheme
+	OrganizationService *services.OrganizationService
 }
 
 // +kubebuilder:rbac:groups=quay.io,resources=organizations,verbs=get;list;watch;create;update;patch;delete
@@ -65,7 +66,16 @@ func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	logf.Log.Info("Successfully retrieved Organization", "name", org.Name)
 
-	// 2. call service
+	// 2. Call service
+	err = r.OrganizationService.Reconcile(ctx, &org)
+	if err != nil {
+		return ctrl.Result{}, err
+	} else {
+		// Update CR manifest
+		if err = r.Update(ctx, &org); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
 }

@@ -2,6 +2,7 @@ package quay
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -46,12 +47,52 @@ func parseAPIError(resp *http.Response) error {
 		if apiErr.Status == 0 {
 			apiErr.Status = resp.StatusCode
 		}
+
+		if baseErr := errorForStatus(apiErr.Status); baseErr != nil {
+			return fmt.Errorf("%w: %w", baseErr, &apiErr)
+		}
+
 		return &apiErr
 	}
 
 	trimmedBody := strings.TrimSpace(string(body))
+
+	if baseErr := errorForStatus(resp.StatusCode); baseErr != nil {
+		if trimmedBody != "" {
+			return fmt.Errorf("%w: %s", baseErr, trimmedBody)
+		}
+
+		return baseErr
+	}
+
 	if trimmedBody == "" {
 		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
 	}
+
 	return fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, trimmedBody)
 }
+
+func errorForStatus(status int) error {
+	switch status {
+	case http.StatusNotFound:
+		return ErrNotFound
+	case http.StatusUnauthorized:
+		return ErrUnauthorized
+	case http.StatusForbidden:
+		return ErrForbidden
+	case http.StatusBadRequest:
+		return ErrBadRequest
+	case http.StatusConflict:
+		return ErrConflict
+	default:
+		return nil
+	}
+}
+
+var (
+	ErrNotFound     = errors.New("resource not found")
+	ErrUnauthorized = errors.New("unauthorized")
+	ErrForbidden    = errors.New("forbidden")
+	ErrBadRequest   = errors.New("bad request")
+	ErrConflict     = errors.New("conflict")
+)

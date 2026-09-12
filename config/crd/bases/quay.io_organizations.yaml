@@ -38,6 +38,13 @@ spec:
             type: object
           spec:
             description: spec defines the desired state of Organization
+            properties:
+              email:
+                type: string
+              invoice_email:
+                type: string
+              tag_expiration_s:
+                type: integer
             type: object
           status:
             description: status defines the observed state of Organization
