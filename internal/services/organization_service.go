@@ -96,6 +96,8 @@ func (s *OrganizationService) create(ctx context.Context, organization *quayiov1
 	// update manifest with Quay's information
 	updateOrganizationFromModel(createdOrg, organization)
 
+	// TODO: add owner Team crd
+
 	return nil
 }
 
