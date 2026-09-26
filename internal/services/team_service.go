@@ -38,7 +38,7 @@ func (s *TeamService) Reconcile(ctx context.Context, team *quayiov1alpha.Team) (
 	}
 
 	// Search if the team exists on Quay
-	_, err := s.QuayClientMgr.Get().GetTeam(team.Spec.OrganizationRef.Name, team.Spec.Name)
+	existingTeam, err := s.QuayClientMgr.Get().GetTeam(team.Spec.OrganizationRef.Name, team.Spec.Name)
 	if err != nil {
 		if errors.Is(err, quay.ErrNotFound) { // Org not found
 			return false, err
@@ -52,7 +52,9 @@ func (s *TeamService) Reconcile(ctx context.Context, team *quayiov1alpha.Team) (
 			return false, err
 		}
 	} else {
-		// TODO: update
+		if err = s.update(ctx, team, existingTeam); err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
@@ -132,6 +134,57 @@ func (s *TeamService) create(ctx context.Context, team *quayiov1alpha.Team) erro
 	return nil
 }
 
+func (s *TeamService) update(ctx context.Context, team *quayiov1alpha.Team, existingTeam *quay.Team) error {
+	logf.Log.Info("[Team Service] Updating team", "org", team.Spec.OrganizationRef.Name, "name", team.Spec.Name)
+
+	var changed bool = false
+
+	// Prepare Quay Model
+	var teamToUpdate quay.UpdateTeam
+	if team.Spec.Description != existingTeam.Description {
+		teamToUpdate.Description = team.Spec.Description
+		changed = true
+	}
+	if team.Spec.Role != existingTeam.Role {
+		teamToUpdate.Role = team.Spec.Role
+		changed = true
+	}
+
+	if changed {
+		err := s.QuayClientMgr.Get().UpdateTeam(team.Spec.OrganizationRef.Name, team.Spec.Name, &teamToUpdate)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Retrieve the list of team's member in Quay
+	existingMembers, err := s.QuayClientMgr.Get().ListTeamMembers(team.Spec.OrganizationRef.Name, team.Spec.Name)
+	if err != nil {
+		return err
+	}
+	existingMembersList := quayMembersToStringList(existingMembers)
+
+	// Update members
+	toAdd, toRemove := reconcileList(team.Spec.Members, existingMembersList)
+
+	if len(toRemove) > 0 {
+		for _, member := range toRemove {
+			if err = s.QuayClientMgr.Get().RemoveTeamMember(team.Spec.OrganizationRef.Name, team.Spec.Name, member); err != nil {
+				return err
+			}
+		}
+	}
+	if len(toAdd) > 0 {
+		for _, member := range toAdd {
+			if err = s.QuayClientMgr.Get().AddTeamMember(team.Spec.OrganizationRef.Name, team.Spec.Name, member); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func (s *TeamService) CreateOwnersTeam(ctx context.Context, organization *quayiov1alpha.Organization, organizationNamespace string) error {
 	// Ensure Quay client is initialized
 	if s.QuayClientMgr.Get() == nil {
@@ -186,14 +239,6 @@ func (s *TeamService) CreateOwnersTeam(ctx context.Context, organization *quayio
 	return nil
 }
 
-func (s *TeamService) DeleteAssociateTeams(ctx context.Context, organizationName string, organizationNamespace string) error {
-	// Ensure Quay client is initialized
-	if s.QuayClientMgr.Get() == nil {
-		return errors.New("Quay client not initialized; ensure QuayConfig is configured")
-	}
-	return nil
-}
-
 // <editor-fold desc="Private methods">
 
 func (s *TeamService) checkIfOrganizationCrdExists(ctx context.Context, organizationCrdName string, namespace string) (bool, error) {
@@ -243,6 +288,46 @@ func (s *TeamService) setOwnerReference(ctx context.Context, team *quayiov1alpha
 
 func formatTeamName(name string, organizationName string) string {
 	return organizationName + "-" + name
+}
+
+func quayMembersToStringList(members []quay.Member) []string {
+	var memberStringList []string
+	for _, member := range members {
+		memberStringList = append(memberStringList, member.Name)
+	}
+	return memberStringList
+}
+
+/*
+reconcileList Desired must be the list from Kubernetes manifest, the current must be the list of Quay
+*/
+func reconcileList(desired, current []string) (toAdd, toRemove []string) {
+	currentSet := make(map[string]struct{}, len(current))
+
+	for _, item := range current {
+		currentSet[item] = struct{}{}
+	}
+
+	desiredSet := make(map[string]struct{}, len(desired))
+
+	for _, item := range desired {
+		desiredSet[item] = struct{}{}
+	}
+
+	// Present in desired but not in current
+	for item := range desiredSet {
+		if _, exists := currentSet[item]; !exists {
+			toAdd = append(toAdd, item)
+		}
+	}
+
+	// Present in current but not in desired
+	for item := range currentSet {
+		if _, exists := desiredSet[item]; !exists {
+			toRemove = append(toRemove, item)
+		}
+	}
+	return
 }
 
 // </editor-fold>
