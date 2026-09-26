@@ -21,19 +21,23 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	quayiov1alpha1 "quay-crd/api/v1alpha"
-	"quay-crd/internal/services/quay"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	quayiov1alpha1 "quay-crd/api/v1alpha"
+	"quay-crd/internal/services"
+	"quay-crd/internal/services/quay"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+const organizationFinalizer = "organization.quay.io/finalizer"
 
 // OrganizationReconciler reconciles a Organization object
 type OrganizationReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme              *runtime.Scheme
+	OrganizationService *services.OrganizationService
 }
 
 // +kubebuilder:rbac:groups=quay.io,resources=organizations,verbs=get;list;watch;create;update;patch;delete
@@ -50,12 +54,9 @@ type OrganizationReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.24.1/pkg/reconcile
 func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	logf.Log.Info("[Organization Controller] Reconcile")
 
-	// TODO(user): your logic here
-	logf.Log.Info("Coucou")
-
-	// 1. Get the Organization from Kubernetes manifest
+	// Get the Organization from Kubernetes manifest
 	var org quayiov1alpha1.Organization
 
 	err := r.Get(ctx, req.NamespacedName, &org)
@@ -63,9 +64,60 @@ func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	logf.Log.Info("Successfully retrieved Organization", "name", org.Name)
+	logf.Log.Info("[Organization Controller] Successfully retrieved Organization", "name", org.Name)
 
-	// 2. call service
+	// Delete
+	if !org.ObjectMeta.DeletionTimestamp.IsZero() {
+		return r.reconcileDelete(ctx, &org)
+	}
+
+	// Add finalizer
+	if !controllerutil.ContainsFinalizer(&org, organizationFinalizer) {
+		controllerutil.AddFinalizer(&org, organizationFinalizer)
+
+		logf.Log.Info("[Organization Controller] Adding Finalizer, comes back to reconcile")
+
+		if err = r.Update(ctx, &org); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	// Create Or Update
+	return r.reconcileOrganization(ctx, &org)
+}
+
+func (r *OrganizationReconciler) reconcileOrganization(ctx context.Context, org *quayiov1alpha1.Organization) (ctrl.Result, error) {
+	logf.Log.Info("[Organization Controller] Reconcile: CreateOrUpdate", "name", org.Name)
+
+	needUpdate, err := r.OrganizationService.Reconcile(ctx, org)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Update if needed
+	if needUpdate {
+		if err = r.Update(ctx, org); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+	return ctrl.Result{}, nil
+}
+
+func (r *OrganizationReconciler) reconcileDelete(ctx context.Context, org *quayiov1alpha1.Organization) (ctrl.Result, error) {
+	logf.Log.Info("[Organization Controller] Reconcile: Delete", "name", org.Name)
+
+	if err := r.OrganizationService.Delete(ctx, org); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Remove finalizer
+	controllerutil.RemoveFinalizer(org, organizationFinalizer)
+
+	if err := r.Update(ctx, org); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }

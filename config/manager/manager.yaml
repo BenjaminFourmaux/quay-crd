@@ -67,7 +67,7 @@ spec:
         args:
           - --leader-elect
           - --health-probe-bind-address=:8081
-        image: quay.lan:8080/quay-crd/quay-operator:v1alpha
+        image: quay.lan:8080/quay-crd/controller:v1alpha
         imagePullPolicy: Always
         name: manager
         ports:

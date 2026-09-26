@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func (c *Client) UpdateTeam(orgname string, teamname string, teamToUpdate *UpdateTeam) error {
@@ -18,12 +19,17 @@ func (c *Client) UpdateTeam(orgname string, teamname string, teamToUpdate *Updat
 		return err
 	}
 
+	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
+
 	req.Header.Set("Authorization", "Bearer "+c.Token)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
+
+	logf.Log.Info("[Quay] Request response", "status", resp.Status)
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
@@ -38,12 +44,17 @@ func (c *Client) DeleteTeam(orgname string, teamname string) error {
 	if err != nil {
 		return err
 	}
+
+	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
+
 	req.Header.Set("Authorization", "Bearer "+c.Token)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
+
+	logf.Log.Info("[Quay] Request response", "status", resp.Status)
 
 	defer resp.Body.Close()
 
@@ -60,12 +71,16 @@ func (c *Client) ListTeamMembers(orgname string, teamname string) ([]Member, err
 		return []Member{}, err
 	}
 
+	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
+
 	req.Header.Set("Authorization", "Bearer "+c.Token)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return []Member{}, err
 	}
+
+	logf.Log.Info("[Quay] Request response", "status", resp.Status)
 
 	defer resp.Body.Close()
 
@@ -92,12 +107,17 @@ func (c *Client) AddTeamMember(orgname string, teamname string, membername strin
 		return err
 	}
 
+	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
+
 	req.Header.Set("Authorization", "Bearer "+c.Token)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
+
+	logf.Log.Info("[Quay] Request response", "status", resp.Status)
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -113,12 +133,17 @@ func (c *Client) RemoveTeamMember(orgname string, teamname string, membername st
 		return err
 	}
 
+	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
+
 	req.Header.Set("Authorization", "Bearer "+c.Token)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
+
+	logf.Log.Info("[Quay] Request response", "status", resp.Status)
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {

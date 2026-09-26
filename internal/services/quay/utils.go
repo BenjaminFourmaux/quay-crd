@@ -16,6 +16,7 @@ func ParseOrganization(body []byte) (Organization, error) {
 		OrderedTeams        []string        `json:"ordered_teams"`
 		InvoiceEmail        bool            `json:"invoice_email"`
 		InvoiceEmailAddress *string         `json:"invoice_email_address"`
+		TagExpirationS      int             `json:"tag_expiration_s"`
 		IsFreeAccount       bool            `json:"is_free_account"`
 	}
 
@@ -31,6 +32,7 @@ func ParseOrganization(body []byte) (Organization, error) {
 		IsMember:            rawOrg.IsMember,
 		InvoiceEmail:        rawOrg.InvoiceEmail,
 		InvoiceEmailAddress: rawOrg.InvoiceEmailAddress,
+		TagExpirationS:      rawOrg.TagExpirationS,
 		IsFreeAccount:       rawOrg.IsFreeAccount,
 	}
 

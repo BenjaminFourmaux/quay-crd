@@ -50,6 +50,7 @@ type Organization struct {
 	Teams               []Team  `json:"teams"`
 	InvoiceEmail        bool    `json:"invoice_email"`
 	InvoiceEmailAddress *string `json:"invoice_email_address"`
+	TagExpirationS      int     `json:"tag_expiration_s"`
 	IsFreeAccount       bool    `json:"is_free_account"`
 }
 
@@ -58,9 +59,9 @@ type CreateOrganization struct {
 }
 
 type UpdateOrganization struct {
-	Email          string `json:"email"`
-	InvoiceEmail   string `json:"invoice_email"`
-	TagExpirationS int    `json:"tag_expiration_s"`
+	Email          *string `json:"email,omitempty"`
+	InvoiceEmail   *bool   `json:"invoice_email,omitempty"`
+	TagExpirationS *int    `json:"tag_expiration_s,omitempty"`
 }
 
 // </editor-fold>

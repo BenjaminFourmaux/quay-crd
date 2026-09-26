@@ -11,7 +11,9 @@ type ClientManager struct {
 NewClientManager is the constructor of Quay ClientManager
 */
 func NewClientManager(client *Client) *ClientManager {
-	return &ClientManager{}
+	return &ClientManager{
+		client: client,
+	}
 }
 
 func (cm *ClientManager) Get() *Client {
