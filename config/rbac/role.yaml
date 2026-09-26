@@ -17,6 +17,7 @@ rules:
   resources:
   - organizations
   - quayconfigs
+  - teams
   verbs:
   - create
   - delete
@@ -30,6 +31,7 @@ rules:
   resources:
   - organizations/finalizers
   - quayconfigs/finalizers
+  - teams/finalizers
   verbs:
   - update
 - apiGroups:
@@ -37,6 +39,7 @@ rules:
   resources:
   - organizations/status
   - quayconfigs/status
+  - teams/status
   verbs:
   - get
   - patch

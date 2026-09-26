@@ -20,7 +20,9 @@ import (
 	"crypto/tls"
 	"flag"
 	"os"
+
 	"quay-crd/internal/services"
+
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -182,6 +184,7 @@ func main() {
 	// Prepare Services registration
 	configService := services.NewConfigService(mgr.GetClient())
 	organizationService := services.NewOrganizationService(mgr.GetClient(), configService.QuayClient)
+	teamService := services.NewTeamService(mgr.GetClient(), configService.QuayClient)
 
 	if err := (&controller.QuayConfigReconciler{
 		Client:        mgr.GetClient(),
@@ -198,6 +201,14 @@ func main() {
 		OrganizationService: organizationService,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "organization")
+		os.Exit(1)
+	}
+	if err := (&controller.TeamReconciler{
+		Client:      mgr.GetClient(),
+		Scheme:      mgr.GetScheme(),
+		TeamService: teamService,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "Failed to create controller", "controller", "team")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

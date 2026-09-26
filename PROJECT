@@ -25,4 +25,12 @@ resources:
   kind: Quayconfig
   path: quay-crd/api/v1alpha
   version: v1alpha
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: quay.io
+  kind: Team
+  path: quay-crd/api/v1alpha
+  version: v1alpha
 version: "3"

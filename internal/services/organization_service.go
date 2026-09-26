@@ -96,7 +96,12 @@ func (s *OrganizationService) create(ctx context.Context, organization *quayiov1
 	// update manifest with Quay's information
 	updateOrganizationFromModel(createdOrg, organization)
 
-	// TODO: add owner Team crd
+	// Create the owners team crd
+	teamService := NewTeamService(s.KubeClient, s.QuayClientMgr)
+	err = teamService.CreateOwnersTeam(ctx, organization.Name, organization.Namespace)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
