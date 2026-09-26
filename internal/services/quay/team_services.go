@@ -3,10 +3,27 @@ package quay
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+func (c *Client) GetTeam(orgname string, teamname string) (*Team, error) {
+	org, err := c.GetOrganization(orgname)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract team from org and find if team exists
+	for _, team := range org.Teams {
+		if team.Name == teamname {
+			return &team, nil
+		}
+	}
+
+	return nil, errors.New("Team not found")
+}
 
 func (c *Client) UpdateTeam(orgname string, teamname string, teamToUpdate *UpdateTeam) error {
 	body, err := json.Marshal(teamToUpdate)
@@ -22,6 +39,7 @@ func (c *Client) UpdateTeam(orgname string, teamname string, teamToUpdate *Updat
 	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
 
 	req.Header.Set("Authorization", "Bearer "+c.Token)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
@@ -32,7 +50,7 @@ func (c *Client) UpdateTeam(orgname string, teamname string, teamToUpdate *Updat
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated {
+	if resp.StatusCode != http.StatusOK {
 		return parseAPIError(resp)
 	} else {
 		return nil
@@ -102,7 +120,7 @@ func (c *Client) ListTeamMembers(orgname string, teamname string) ([]Member, err
 }
 
 func (c *Client) AddTeamMember(orgname string, teamname string, membername string) error {
-	req, err := http.NewRequest(http.MethodPost, c.BaseURL+"/api/"+c.APIVersion+"/organization/"+orgname+"/team/"+teamname+"/members/"+membername, nil)
+	req, err := http.NewRequest(http.MethodPut, c.BaseURL+"/api/"+c.APIVersion+"/organization/"+orgname+"/team/"+teamname+"/members/"+membername, nil)
 	if err != nil {
 		return err
 	}

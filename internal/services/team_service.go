@@ -32,6 +32,29 @@ func NewTeamService(kubeClient client.Client, quayClientMgr *quay.ClientManager,
 }
 
 func (s *TeamService) Reconcile(ctx context.Context, team *quayiov1alpha.Team) (bool, error) {
+	// Ensure Quay client is initialized
+	if s.QuayClientMgr.Get() == nil {
+		return false, errors.New("Quay client not initialized; ensure QuayConfig is configured")
+	}
+
+	// Search if the team exists on Quay
+	_, err := s.QuayClientMgr.Get().GetTeam(team.Spec.OrganizationRef.Name, team.Spec.Name)
+	if err != nil {
+		if errors.Is(err, quay.ErrNotFound) { // Org not found
+			return false, err
+		} else if err.Error() == "Team not found" {
+			// Team not found, create it
+			if err = s.create(ctx, team); err != nil {
+				return false, err
+			}
+		} else {
+			// other errors, raise them
+			return false, err
+		}
+	} else {
+		// TODO: update
+	}
+
 	return true, nil
 }
 
@@ -67,6 +90,42 @@ func (s *TeamService) Delete(ctx context.Context, team *quayiov1alpha.Team) erro
 		}
 		return err
 	}
+	return nil
+}
+
+func (s *TeamService) create(ctx context.Context, team *quayiov1alpha.Team) error {
+	logf.Log.Info("[Team Service] Creating team", "org", team.Spec.OrganizationRef.Name, "name", team.Spec.Name)
+
+	// TODO: set ownerReference
+
+	// Create the team Model
+	teamToCreate := quay.UpdateTeam{
+		Description: team.Spec.Description,
+		Role:        team.Spec.Role,
+	}
+
+	err := s.QuayClientMgr.Get().UpdateTeam(team.Spec.OrganizationRef.Name, team.Spec.Name, &teamToCreate)
+	if err != nil {
+		logf.Log.Error(err, "[Team Service] Error when creating team", "org", team.Spec.OrganizationRef.Name, "name", team.Spec.Name)
+		return err
+	} else {
+		logf.Log.Info("[Team Service] Successfully created team", "org", team.Spec.OrganizationRef.Name, "name", team.Spec.Name)
+	}
+
+	// Add specified team members
+	// TODO: getting members from group crd if specified in this manifest
+	for _, member := range team.Spec.Members {
+		logf.Log.Info("[Team Service] Adding member", "org", team.Spec.OrganizationRef.Name, "team", team.Spec.Name, "member", member)
+
+		err = s.QuayClientMgr.Get().AddTeamMember(team.Spec.OrganizationRef.Name, team.Spec.Name, member)
+		if err != nil {
+			logf.Log.Error(err, "[Team Service] Error when adding team member", "org", team.Spec.OrganizationRef.Name, "team", team.Spec.Name, "member", member)
+			return err
+		} else {
+			logf.Log.Info("[Team Service] Member successfully added", "org", team.Spec.OrganizationRef.Name, "team", team.Spec.Name, "member", member)
+		}
+	}
+
 	return nil
 }
 

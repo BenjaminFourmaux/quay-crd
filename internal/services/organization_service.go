@@ -41,6 +41,8 @@ func (s *OrganizationService) Reconcile(ctx context.Context, organization *quayi
 			if err = s.create(ctx, organization); err != nil {
 				return false, err
 			}
+		} else {
+			return false, err
 		}
 	} else {
 		// Chek if Quay state corresponds to desired state, if true return false
