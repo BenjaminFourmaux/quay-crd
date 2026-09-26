@@ -183,8 +183,8 @@ func main() {
 
 	// Prepare Services registration
 	configService := services.NewConfigService(mgr.GetClient())
-	organizationService := services.NewOrganizationService(mgr.GetClient(), configService.QuayClient)
-	teamService := services.NewTeamService(mgr.GetClient(), configService.QuayClient)
+	organizationService := services.NewOrganizationService(mgr.GetClient(), configService.QuayClient, mgr.GetScheme())
+	teamService := services.NewTeamService(mgr.GetClient(), configService.QuayClient, mgr.GetScheme())
 
 	if err := (&controller.QuayConfigReconciler{
 		Client:        mgr.GetClient(),

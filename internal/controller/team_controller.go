@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"quay-crd/internal/services"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -27,6 +28,8 @@ import (
 
 	quayiov1alpha "quay-crd/api/v1alpha"
 )
+
+const teamFinalizer = "team.quay.io/finalizer"
 
 // TeamReconciler reconciles a Team object
 type TeamReconciler struct {
@@ -49,10 +52,70 @@ type TeamReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.24.1/pkg/reconcile
 func (r *TeamReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	logf.Log.Info("[Team Controller] Reconcile")
 
-	logf.Log.Info("Reconciling Team")
-	logf.Log.Info("kube namespace: " + req.Namespace)
+	// Get the Team from kubernetes manifest
+	var team quayiov1alpha.Team
+
+	err := r.Get(ctx, req.NamespacedName, &team)
+	if err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	logf.Log.Info("[Team Controller] Successfully retrieved Team", "name", team.Name)
+
+	// Delete
+	if !team.ObjectMeta.DeletionTimestamp.IsZero() {
+		return r.reconcileDelete(ctx, &team)
+	}
+
+	// Add finalizer
+	if !controllerutil.ContainsFinalizer(&team, teamFinalizer) {
+		controllerutil.AddFinalizer(&team, teamFinalizer)
+
+		logf.Log.Info("[Team Controller] Adding Finalizer, comes back to reconcile")
+
+		if err = r.Update(ctx, &team); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	// Create Or Update
+	return r.reconcileTeam(ctx, &team)
+}
+
+func (r *TeamReconciler) reconcileTeam(ctx context.Context, team *quayiov1alpha.Team) (ctrl.Result, error) {
+	logf.Log.Info("[Team Controller] Reconcile: CreateOrUpdate", "name", team.Name)
+
+	needUpdate, err := r.TeamService.Reconcile(ctx, team)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Update if needed
+	if needUpdate {
+		if err = r.Update(ctx, team); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+	return ctrl.Result{}, nil
+}
+
+func (r *TeamReconciler) reconcileDelete(ctx context.Context, team *quayiov1alpha.Team) (ctrl.Result, error) {
+	logf.Log.Info("[Team Controller] Reconcile: Delete", "name", team.Name)
+
+	if err := r.TeamService.Delete(ctx, team); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Remove finalizer
+	controllerutil.RemoveFinalizer(team, teamFinalizer)
+
+	if err := r.Update(ctx, team); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }

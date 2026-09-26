@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	quayiov1alpha "quay-crd/api/v1alpha"
 	"quay-crd/internal/services/quay"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -12,15 +13,17 @@ import (
 type OrganizationService struct {
 	KubeClient    client.Client
 	QuayClientMgr *quay.ClientManager
+	Scheme        *runtime.Scheme
 }
 
 /*
 NewOrganizationService is the constructor for OrganizationService
 */
-func NewOrganizationService(kubeClient client.Client, quayClientMgr *quay.ClientManager) *OrganizationService {
+func NewOrganizationService(kubeClient client.Client, quayClientMgr *quay.ClientManager, scheme *runtime.Scheme) *OrganizationService {
 	return &OrganizationService{
 		KubeClient:    kubeClient,
 		QuayClientMgr: quayClientMgr,
+		Scheme:        scheme,
 	}
 }
 
@@ -74,6 +77,9 @@ func (s *OrganizationService) Delete(ctx context.Context, organization *quayiov1
 		}
 		return err
 	}
+
+	// TODO: remove associated Teams from Kubernetes
+
 	return nil
 }
 
@@ -97,8 +103,8 @@ func (s *OrganizationService) create(ctx context.Context, organization *quayiov1
 	updateOrganizationFromModel(createdOrg, organization)
 
 	// Create the owners team crd
-	teamService := NewTeamService(s.KubeClient, s.QuayClientMgr)
-	err = teamService.CreateOwnersTeam(ctx, organization.Name, organization.Namespace)
+	teamService := NewTeamService(s.KubeClient, s.QuayClientMgr, s.Scheme)
+	err = teamService.CreateOwnersTeam(ctx, organization, organization.Namespace)
 	if err != nil {
 		return err
 	}
