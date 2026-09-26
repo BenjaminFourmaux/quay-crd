@@ -84,7 +84,7 @@ func (s *TeamService) Delete(ctx context.Context, team *quayiov1alpha.Team) erro
 	err := s.QuayClientMgr.Get().DeleteTeam(team.Spec.OrganizationRef.Name, team.Spec.Name)
 
 	if err != nil {
-		if errors.Is(err, quay.ErrNotFound) {
+		if errors.Is(err, quay.ErrNotFound) || errors.Is(err, quay.ErrForbidden) {
 			// Already deleted in Quay: we assume the delete task is completed
 			return nil
 		}
@@ -96,7 +96,10 @@ func (s *TeamService) Delete(ctx context.Context, team *quayiov1alpha.Team) erro
 func (s *TeamService) create(ctx context.Context, team *quayiov1alpha.Team) error {
 	logf.Log.Info("[Team Service] Creating team", "org", team.Spec.OrganizationRef.Name, "name", team.Spec.Name)
 
-	// TODO: set ownerReference
+	// Set OwnerReference to the organization ref
+	if err := s.setOwnerReference(ctx, team); err != nil {
+		return err
+	}
 
 	// Create the team Model
 	teamToCreate := quay.UpdateTeam{
@@ -209,6 +212,33 @@ func (s *TeamService) checkIfOrganizationCrdExists(ctx context.Context, organiza
 		return false, err
 	}
 	return true, nil
+}
+
+func (s *TeamService) setOwnerReference(ctx context.Context, team *quayiov1alpha.Team) error {
+	// Retrieve the organization manifest
+	var org quayiov1alpha.Organization
+
+	err := s.KubeClient.Get(
+		ctx,
+		types.NamespacedName{
+			Name:      team.Spec.OrganizationRef.Name,
+			Namespace: team.Spec.OrganizationRef.Namespace,
+		},
+		&org,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Set ownerReference
+	if err = controllerutil.SetControllerReference(
+		&org,
+		team,
+		s.Scheme,
+	); err != nil {
+		return err
+	}
+	return nil
 }
 
 func formatTeamName(name string, organizationName string) string {
