@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	quayiov1alpha1 "quay-crd/api/v1alpha"
+	quayiov1alpha "quay-crd/api/v1alpha"
 	"quay-crd/internal/services"
 	"quay-crd/internal/services/quay"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -57,7 +57,7 @@ func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	logf.Log.Info("[Organization Controller] Reconcile")
 
 	// Get the Organization from Kubernetes manifest
-	var org quayiov1alpha1.Organization
+	var org quayiov1alpha.Organization
 
 	err := r.Get(ctx, req.NamespacedName, &org)
 	if err != nil {
@@ -88,7 +88,7 @@ func (r *OrganizationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	return r.reconcileOrganization(ctx, &org)
 }
 
-func (r *OrganizationReconciler) reconcileOrganization(ctx context.Context, org *quayiov1alpha1.Organization) (ctrl.Result, error) {
+func (r *OrganizationReconciler) reconcileOrganization(ctx context.Context, org *quayiov1alpha.Organization) (ctrl.Result, error) {
 	logf.Log.Info("[Organization Controller] Reconcile: CreateOrUpdate", "name", org.Name)
 
 	needUpdate, err := r.OrganizationService.Reconcile(ctx, org)
@@ -105,7 +105,7 @@ func (r *OrganizationReconciler) reconcileOrganization(ctx context.Context, org 
 	return ctrl.Result{}, nil
 }
 
-func (r *OrganizationReconciler) reconcileDelete(ctx context.Context, org *quayiov1alpha1.Organization) (ctrl.Result, error) {
+func (r *OrganizationReconciler) reconcileDelete(ctx context.Context, org *quayiov1alpha.Organization) (ctrl.Result, error) {
 	logf.Log.Info("[Organization Controller] Reconcile: Delete", "name", org.Name)
 
 	if err := r.OrganizationService.Delete(ctx, org); err != nil {
@@ -124,7 +124,7 @@ func (r *OrganizationReconciler) reconcileDelete(ctx context.Context, org *quayi
 
 func (r *OrganizationReconciler) setNotReady(
 	ctx context.Context,
-	org *quayiov1alpha1.Organization,
+	org *quayiov1alpha.Organization,
 	reason string,
 	message string,
 ) error {
@@ -145,7 +145,7 @@ func (r *OrganizationReconciler) setNotReady(
 
 func (r *OrganizationReconciler) setReady(
 	ctx context.Context,
-	org *quayiov1alpha1.Organization,
+	org *quayiov1alpha.Organization,
 	reason string,
 	message string,
 ) error {
@@ -209,7 +209,7 @@ func toReasonPart(input string) string {
 // SetupWithManager sets up the controller with the Manager.
 func (r *OrganizationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&quayiov1alpha1.Organization{}).
+		For(&quayiov1alpha.Organization{}).
 		Named("organization").
 		Complete(r)
 }

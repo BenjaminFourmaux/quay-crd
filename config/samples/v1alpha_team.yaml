@@ -1,0 +1,19 @@
+apiVersion: quay.io/v1alpha
+kind: Team
+metadata:
+  labels:
+    app.kubernetes.io/name: quay-crd
+    app.kubernetes.io/managed-by: kustomize
+  name: team-sample
+spec:
+  name: support
+  organizationRef:
+    apiVersion: quay.io/v1alpha
+    kind: Organization
+    name: organization-sample
+    namespace: quay-gitops
+  description: "the support team"
+  role: "member"
+  members:
+    - "johndoe"
+
