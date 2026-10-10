@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -326,6 +327,10 @@ func (s *TeamService) extractMembersFromGroups(ctx context.Context, groups []cor
 			&grp,
 		)
 		if err != nil {
+			if apierrors.IsNotFound(err) {
+				logf.Log.Info("[Team Service] Group resource not found, skipping", "group", group.Name, "namespace", namespace)
+				continue
+			}
 			return nil, err
 		}
 		members = append(members, grp.Spec.Members...)
@@ -343,38 +348,6 @@ func quayMembersToStringList(members []quay.Member) []string {
 		memberStringList = append(memberStringList, member.Name)
 	}
 	return memberStringList
-}
-
-/*
-reconcileList Desired must be the list from Kubernetes manifest, the current must be the list of Quay
-*/
-func reconcileList(desired, current []string) (toAdd, toRemove []string) {
-	currentSet := make(map[string]struct{}, len(current))
-
-	for _, item := range current {
-		currentSet[item] = struct{}{}
-	}
-
-	desiredSet := make(map[string]struct{}, len(desired))
-
-	for _, item := range desired {
-		desiredSet[item] = struct{}{}
-	}
-
-	// Present in desired but not in current
-	for item := range desiredSet {
-		if _, exists := currentSet[item]; !exists {
-			toAdd = append(toAdd, item)
-		}
-	}
-
-	// Present in current but not in desired
-	for item := range currentSet {
-		if _, exists := desiredSet[item]; !exists {
-			toRemove = append(toRemove, item)
-		}
-	}
-	return
 }
 
 // </editor-fold>
