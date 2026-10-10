@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -118,8 +119,20 @@ func (s *TeamService) create(ctx context.Context, team *quayiov1alpha.Team) erro
 	}
 
 	// Add specified team members
-	// TODO: getting members from group crd if specified in this manifest
-	for _, member := range team.Spec.Members {
+	var members []string
+
+	members = append(members, team.Spec.Members...)
+
+	if team.Spec.Groups != nil {
+		groupsMembers, err := s.extractMembersFromGroups(ctx, team.Spec.Groups, team.ObjectMeta.Namespace)
+		if err != nil {
+			return err
+		}
+		// Merge groups members (if specified) with team members
+		members = append(members, groupsMembers...)
+	}
+
+	for _, member := range uniqueStrings(members) {
 		logf.Log.Info("[Team Service] Adding member", "org", team.Spec.OrganizationRef.Name, "team", team.Spec.Name, "member", member)
 
 		err = s.QuayClientMgr.Get().AddTeamMember(team.Spec.OrganizationRef.Name, team.Spec.Name, member)
@@ -164,8 +177,22 @@ func (s *TeamService) update(ctx context.Context, team *quayiov1alpha.Team, exis
 	}
 	existingMembersList := quayMembersToStringList(existingMembers)
 
+	// Retrieve the list from team members and referenced group's members
+	var members []string
+
+	members = append(members, team.Spec.Members...)
+
+	if team.Spec.Groups != nil {
+		groupsMembers, err := s.extractMembersFromGroups(ctx, team.Spec.Groups, team.ObjectMeta.Namespace)
+		if err != nil {
+			return err
+		}
+		// Merge groups members (if specified) with team members
+		members = append(members, groupsMembers...)
+	}
+
 	// Update members
-	toAdd, toRemove := reconcileList(team.Spec.Members, existingMembersList)
+	toAdd, toRemove := reconcileList(uniqueStrings(members), existingMembersList)
 
 	if len(toRemove) > 0 {
 		for _, member := range toRemove {
@@ -286,6 +313,31 @@ func (s *TeamService) setOwnerReference(ctx context.Context, team *quayiov1alpha
 	return nil
 }
 
+func (s *TeamService) extractMembersFromGroups(ctx context.Context, groups []corev1.LocalObjectReference, namespace string) ([]string, error) {
+	var members []string
+	for _, group := range groups {
+		// Retrieve the group manifest from k8s
+		var grp quayiov1alpha.Group
+		err := s.KubeClient.Get(
+			ctx,
+			types.NamespacedName{
+				Name:      group.Name,
+				Namespace: namespace,
+			},
+			&grp,
+		)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				logf.Log.Info("[Team Service] Group resource not found, skipping", "group", group.Name, "namespace", namespace)
+				continue
+			}
+			return nil, err
+		}
+		members = append(members, grp.Spec.Members...)
+	}
+	return members, nil
+}
+
 func formatTeamName(name string, organizationName string) string {
 	return organizationName + "-" + name
 }
@@ -296,38 +348,6 @@ func quayMembersToStringList(members []quay.Member) []string {
 		memberStringList = append(memberStringList, member.Name)
 	}
 	return memberStringList
-}
-
-/*
-reconcileList Desired must be the list from Kubernetes manifest, the current must be the list of Quay
-*/
-func reconcileList(desired, current []string) (toAdd, toRemove []string) {
-	currentSet := make(map[string]struct{}, len(current))
-
-	for _, item := range current {
-		currentSet[item] = struct{}{}
-	}
-
-	desiredSet := make(map[string]struct{}, len(desired))
-
-	for _, item := range desired {
-		desiredSet[item] = struct{}{}
-	}
-
-	// Present in desired but not in current
-	for item := range desiredSet {
-		if _, exists := currentSet[item]; !exists {
-			toAdd = append(toAdd, item)
-		}
-	}
-
-	// Present in current but not in desired
-	for item := range currentSet {
-		if _, exists := desiredSet[item]; !exists {
-			toRemove = append(toRemove, item)
-		}
-	}
-	return
 }
 
 // </editor-fold>

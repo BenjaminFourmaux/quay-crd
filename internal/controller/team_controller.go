@@ -18,8 +18,11 @@ package controller
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/types"
 	"quay-crd/internal/services"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -125,5 +128,36 @@ func (r *TeamReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&quayiov1alpha.Team{}).
 		Named("team").
+		Watches(
+			&quayiov1alpha.Group{},
+			handler.EnqueueRequestsFromMapFunc(
+				func(ctx context.Context, obj client.Object) []reconcile.Request {
+					var teams quayiov1alpha.TeamList
+
+					if err := r.List(ctx, &teams, client.InNamespace(obj.GetNamespace())); err != nil {
+						return nil
+					}
+
+					requests := make([]reconcile.Request, 0)
+
+					for _, team := range teams.Items {
+						for _, groupRef := range team.Spec.Groups {
+							if groupRef.Name == obj.GetName() {
+								logf.Log.Info("[Team Controller] Watcher enqueueing Team due to Group change", "team", team.Name, "group", obj.GetName())
+
+								requests = append(requests, reconcile.Request{
+									NamespacedName: types.NamespacedName{
+										Name:      team.Name,
+										Namespace: team.Namespace,
+									},
+								})
+								break
+							}
+						}
+					}
+					return requests
+				},
+			),
+		).
 		Complete(r)
 }

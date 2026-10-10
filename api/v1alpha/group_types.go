@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -25,25 +24,20 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// TeamSpec defines the desired state of Team
-type TeamSpec struct {
-	Name            string                        `json:"name"`
-	OrganizationRef corev1.ObjectReference        `json:"organizationRef"`
-	Description     string                        `json:"description,omitempty"`
-	Role            string                        `json:"role"`
-	Members         []string                      `json:"members"`
-	Groups          []corev1.LocalObjectReference `json:"groups,omitempty"`
+// GroupSpec defines the desired state of Group
+type GroupSpec struct {
+	Members []string `json:"members,omitempty"`
 }
 
-// TeamStatus defines the observed state of Team.
-type TeamStatus struct {
+// GroupStatus defines the observed state of Group.
+type GroupStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
 
-	// conditions represent the current state of the Team resource.
+	// conditions represent the current state of the Group resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
 	//
 	// Standard condition types include:
@@ -61,35 +55,35 @@ type TeamStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// Team is the Schema for the teams API
-type Team struct {
+// Group is the Schema for the groups API
+type Group struct {
 	metav1.TypeMeta `json:",inline"`
 
 	// metadata is a standard object metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitzero"`
 
-	// spec defines the desired state of Team
+	// spec defines the desired state of Group
 	// +required
-	Spec TeamSpec `json:"spec"`
+	Spec GroupSpec `json:"spec"`
 
-	// status defines the observed state of Team
+	// status defines the observed state of Group
 	// +optional
-	Status TeamStatus `json:"status,omitzero"`
+	Status GroupStatus `json:"status,omitzero"`
 }
 
 // +kubebuilder:object:root=true
 
-// TeamList contains a list of Team
-type TeamList struct {
+// GroupList contains a list of Group
+type GroupList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitzero"`
-	Items           []Team `json:"items"`
+	Items           []Group `json:"items"`
 }
 
 func init() {
 	SchemeBuilder.Register(func(s *runtime.Scheme) error {
-		s.AddKnownTypes(SchemeGroupVersion, &Team{}, &TeamList{})
+		s.AddKnownTypes(SchemeGroupVersion, &Group{}, &GroupList{})
 		return nil
 	})
 }

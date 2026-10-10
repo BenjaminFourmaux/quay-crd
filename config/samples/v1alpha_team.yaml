@@ -16,4 +16,6 @@ spec:
   role: "member"
   members:
     - "johndoe"
+  groups:
+    - name: group-sample
 

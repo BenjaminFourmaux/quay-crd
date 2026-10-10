@@ -1,0 +1,11 @@
+apiVersion: quay.io/v1alpha
+kind: Group
+metadata:
+  labels:
+    app.kubernetes.io/name: quay-crd
+    app.kubernetes.io/managed-by: kustomize
+  name: group-sample
+spec:
+  members:
+    - "titi"
+    - "tutu"

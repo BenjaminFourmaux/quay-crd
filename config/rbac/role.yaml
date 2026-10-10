@@ -15,6 +15,7 @@ rules:
 - apiGroups:
   - quay.io
   resources:
+  - groups
   - organizations
   - quayconfigs
   - teams
@@ -29,6 +30,7 @@ rules:
 - apiGroups:
   - quay.io
   resources:
+  - groups/finalizers
   - organizations/finalizers
   - quayconfigs/finalizers
   - teams/finalizers
@@ -37,6 +39,7 @@ rules:
 - apiGroups:
   - quay.io
   resources:
+  - groups/status
   - organizations/status
   - quayconfigs/status
   - teams/status
