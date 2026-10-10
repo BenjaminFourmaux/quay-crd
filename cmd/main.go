@@ -185,6 +185,7 @@ func main() {
 	configService := services.NewConfigService(mgr.GetClient())
 	organizationService := services.NewOrganizationService(mgr.GetClient(), configService.QuayClient, mgr.GetScheme())
 	teamService := services.NewTeamService(mgr.GetClient(), configService.QuayClient, mgr.GetScheme())
+	groupService := services.NewGroupService(mgr.GetClient(), configService.QuayClient, mgr.GetScheme())
 
 	if err := (&controller.QuayConfigReconciler{
 		Client:        mgr.GetClient(),
@@ -209,6 +210,14 @@ func main() {
 		TeamService: teamService,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "team")
+		os.Exit(1)
+	}
+	if err := (&controller.GroupReconciler{
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+		GroupService: groupService,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "Failed to create controller", "controller", "group")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

@@ -118,8 +118,20 @@ func (s *TeamService) create(ctx context.Context, team *quayiov1alpha.Team) erro
 	}
 
 	// Add specified team members
-	// TODO: getting members from group crd if specified in this manifest
-	for _, member := range team.Spec.Members {
+	var members []string
+
+	members = append(members, team.Spec.Members...)
+
+	if team.Spec.Groups != nil {
+		groupsMembers, err := s.extractMembersFromGroups(ctx, team.Spec.Groups, team.ObjectMeta.Namespace)
+		if err != nil {
+			return err
+		}
+		// Merge groups members (if specified) with team members
+		members = append(members, groupsMembers...)
+	}
+
+	for _, member := range uniqueStrings(members) {
 		logf.Log.Info("[Team Service] Adding member", "org", team.Spec.OrganizationRef.Name, "team", team.Spec.Name, "member", member)
 
 		err = s.QuayClientMgr.Get().AddTeamMember(team.Spec.OrganizationRef.Name, team.Spec.Name, member)
@@ -164,8 +176,22 @@ func (s *TeamService) update(ctx context.Context, team *quayiov1alpha.Team, exis
 	}
 	existingMembersList := quayMembersToStringList(existingMembers)
 
+	// Retrieve the list from team members and referenced group's members
+	var members []string
+
+	members = append(members, team.Spec.Members...)
+
+	if team.Spec.Groups != nil {
+		groupsMembers, err := s.extractMembersFromGroups(ctx, team.Spec.Groups, team.ObjectMeta.Namespace)
+		if err != nil {
+			return err
+		}
+		// Merge groups members (if specified) with team members
+		members = append(members, groupsMembers...)
+	}
+
 	// Update members
-	toAdd, toRemove := reconcileList(team.Spec.Members, existingMembersList)
+	toAdd, toRemove := reconcileList(uniqueStrings(members), existingMembersList)
 
 	if len(toRemove) > 0 {
 		for _, member := range toRemove {
@@ -284,6 +310,27 @@ func (s *TeamService) setOwnerReference(ctx context.Context, team *quayiov1alpha
 		return err
 	}
 	return nil
+}
+
+func (s *TeamService) extractMembersFromGroups(ctx context.Context, groups []corev1.LocalObjectReference, namespace string) ([]string, error) {
+	var members []string
+	for _, group := range groups {
+		// Retrieve the group manifest from k8s
+		var grp quayiov1alpha.Group
+		err := s.KubeClient.Get(
+			ctx,
+			types.NamespacedName{
+				Name:      group.Name,
+				Namespace: namespace,
+			},
+			&grp,
+		)
+		if err != nil {
+			return nil, err
+		}
+		members = append(members, grp.Spec.Members...)
+	}
+	return members, nil
 }
 
 func formatTeamName(name string, organizationName string) string {

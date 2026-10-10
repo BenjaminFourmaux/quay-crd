@@ -4,20 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.21.0
-  name: teams.quay.io
+  name: groups.quay.io
 spec:
   group: quay.io
   names:
-    kind: Team
-    listKind: TeamList
-    plural: teams
-    singular: team
+    kind: Group
+    listKind: GroupList
+    plural: groups
+    singular: group
   scope: Namespaced
   versions:
   - name: v1alpha
     schema:
       openAPIV3Schema:
-        description: Team is the Schema for the teams API
+        description: Group is the Schema for the groups API
         properties:
           apiVersion:
             description: |-
@@ -37,92 +37,19 @@ spec:
           metadata:
             type: object
           spec:
-            description: spec defines the desired state of Team
+            description: spec defines the desired state of Group
             properties:
-              description:
-                type: string
-              groups:
-                items:
-                  description: |-
-                    LocalObjectReference contains enough information to let you locate the
-                    referenced object inside the same namespace.
-                  properties:
-                    name:
-                      default: ""
-                      description: |-
-                        Name of the referent.
-                        This field is effectively required, but due to backwards compatibility is
-                        allowed to be empty. Instances of this type with an empty value here are
-                        almost certainly wrong.
-                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      type: string
-                  type: object
-                  x-kubernetes-map-type: atomic
-                type: array
               members:
                 items:
                   type: string
                 type: array
-              name:
-                type: string
-              organizationRef:
-                description: ObjectReference contains enough information to let you
-                  inspect or modify the referred object.
-                properties:
-                  apiVersion:
-                    description: API version of the referent.
-                    type: string
-                  fieldPath:
-                    description: |-
-                      If referring to a piece of an object instead of an entire object, this string
-                      should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
-                      For example, if the object reference is to a container within a pod, this would take on a value like:
-                      "spec.containers{name}" (where "name" refers to the name of the container that triggered
-                      the event) or if no container name is specified "spec.containers[2]" (container with
-                      index 2 in this pod). This syntax is chosen only to have some well-defined way of
-                      referencing a part of an object.
-                    type: string
-                  kind:
-                    description: |-
-                      Kind of the referent.
-                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-                    type: string
-                  name:
-                    description: |-
-                      Name of the referent.
-                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    type: string
-                  namespace:
-                    description: |-
-                      Namespace of the referent.
-                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
-                    type: string
-                  resourceVersion:
-                    description: |-
-                      Specific resourceVersion to which this reference is made, if any.
-                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
-                    type: string
-                  uid:
-                    description: |-
-                      UID of the referent.
-                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
-                    type: string
-                type: object
-                x-kubernetes-map-type: atomic
-              role:
-                type: string
-            required:
-            - members
-            - name
-            - organizationRef
-            - role
             type: object
           status:
-            description: status defines the observed state of Team
+            description: status defines the observed state of Group
             properties:
               conditions:
                 description: |-
-                  conditions represent the current state of the Team resource.
+                  conditions represent the current state of the Group resource.
                   Each condition has a unique type and reflects the status of a specific aspect of the resource.
 
                   Standard condition types include:

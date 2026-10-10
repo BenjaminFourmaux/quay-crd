@@ -5,6 +5,7 @@ resources:
 - bases/quay.io_organizations.yaml
 - bases/quay.io_quayconfigs.yaml
 - bases/quay.io_teams.yaml
+- bases/quay.io_groups.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:
