@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"quay-crd/internal/services"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -91,15 +92,20 @@ func (r *GroupReconciler) reconcileGroup(ctx context.Context, group *quayiov1alp
 
 	needUpdate, err := r.GroupService.Reconcile(ctx, group)
 	if err != nil {
+		r.setStatus(ctx, group, err)
 		return ctrl.Result{}, err
 	}
 
 	// Update if needed
 	if needUpdate {
 		if err = r.Update(ctx, group); err != nil {
+			r.setStatus(ctx, group, err)
 			return ctrl.Result{}, err
 		}
 	}
+
+	r.setStatus(ctx, group, nil)
+
 	return ctrl.Result{}, nil
 }
 
@@ -118,6 +124,31 @@ func (r *GroupReconciler) reconcileDelete(ctx context.Context, group *quayiov1al
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *GroupReconciler) setStatus(ctx context.Context, group *quayiov1alpha.Group, err error) {
+	// if err is nil, set status to Ready success
+	if err == nil {
+		SetCondition(
+			&group.Status.Conditions,
+			group.Generation,
+			metav1.ConditionTrue,
+			ReasonReconcileSuccess,
+			"Reconciliation successful",
+		)
+	} else {
+		SetCondition(
+			&group.Status.Conditions,
+			group.Generation,
+			metav1.ConditionFalse,
+			GetErrorReason(err),
+			err.Error(),
+		)
+	}
+
+	if statusErr := r.Status().Update(ctx, group); statusErr != nil {
+		logf.Log.Error(statusErr, "Unable to update Group status", "name", group.Name)
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
