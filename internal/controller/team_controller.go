@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"quay-crd/internal/services"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -94,15 +95,20 @@ func (r *TeamReconciler) reconcileTeam(ctx context.Context, team *quayiov1alpha.
 
 	needUpdate, err := r.TeamService.Reconcile(ctx, team)
 	if err != nil {
+		r.setStatus(ctx, team, err)
 		return ctrl.Result{}, err
 	}
 
 	// Update if needed
 	if needUpdate {
 		if err = r.Update(ctx, team); err != nil {
+			r.setStatus(ctx, team, err)
 			return ctrl.Result{}, err
 		}
 	}
+
+	r.setStatus(ctx, team, nil)
+
 	return ctrl.Result{}, nil
 }
 
@@ -121,6 +127,31 @@ func (r *TeamReconciler) reconcileDelete(ctx context.Context, team *quayiov1alph
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *TeamReconciler) setStatus(ctx context.Context, team *quayiov1alpha.Team, err error) {
+	// if err is nil, set status to Ready success
+	if err == nil {
+		SetCondition(
+			&team.Status.Conditions,
+			team.Generation,
+			metav1.ConditionTrue,
+			ReasonReconcileSuccess,
+			"Reconciliation successful",
+		)
+	} else {
+		SetCondition(
+			&team.Status.Conditions,
+			team.Generation,
+			metav1.ConditionFalse,
+			GetErrorReason(err),
+			err.Error(),
+		)
+	}
+
+	if statusErr := r.Status().Update(ctx, team); statusErr != nil {
+		logf.Log.Error(statusErr, "Unable to update Team status", "name", team.Name)
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

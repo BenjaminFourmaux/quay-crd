@@ -22,17 +22,30 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // TeamSpec defines the desired state of Team
 type TeamSpec struct {
-	Name            string                        `json:"name"`
-	OrganizationRef corev1.ObjectReference        `json:"organizationRef"`
-	Description     string                        `json:"description,omitempty"`
-	Role            string                        `json:"role"`
-	Members         []string                      `json:"members"`
-	Groups          []corev1.LocalObjectReference `json:"groups,omitempty"`
+	// +required
+	Name string `json:"name"`
+
+	// OrganizationRef is a reference to the organization that this team belongs to
+	// +required
+	OrganizationRef corev1.ObjectReference `json:"organizationRef"`
+
+	// +optional
+	Description string `json:"description,omitempty"`
+
+	// Role of the team within the organization
+	// +required
+	// +kubebuilder:validation:Enum=admin;member;viewer
+	Role string `json:"role"`
+
+	// Members of the team
+	// +optional
+	Members []string `json:"members"`
+
+	// Groups that the team belongs to
+	// +optional
+	Groups []corev1.LocalObjectReference `json:"groups,omitempty"`
 }
 
 // TeamStatus defines the observed state of Team.

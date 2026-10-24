@@ -7,9 +7,19 @@ import (
 
 // OrganizationSpec defines the desired state of Organization
 type OrganizationSpec struct {
-	Email          *string `json:"email,omitempty"`
-	InvoiceEmail   *bool   `json:"invoice_email,omitempty"`
-	TagExpirationS *int    `json:"tag_expiration_s,omitempty"`
+	// Email is the contact email for the organization
+	// +optional
+	// +kubebuilder:validation:Format=email
+	Email *string `json:"email,omitempty"`
+
+	// +optional
+	InvoiceEmail *bool `json:"invoice_email,omitempty"`
+
+	// TagExpirationS is the namespace-level tag expiration in seconds. 0 disables expiration; otherwise positive duration in seconds.
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:default=1209600
+	TagExpirationS *int `json:"tag_expiration_s,omitempty"`
 }
 
 // OrganizationStatus defines the observed state of Organization.

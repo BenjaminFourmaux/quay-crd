@@ -18,13 +18,10 @@ package controller
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	quayiov1alpha "quay-crd/api/v1alpha"
 	"quay-crd/internal/services"
-	"quay-crd/internal/services/quay"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -93,15 +90,20 @@ func (r *OrganizationReconciler) reconcileOrganization(ctx context.Context, org 
 
 	needUpdate, err := r.OrganizationService.Reconcile(ctx, org)
 	if err != nil {
+		r.setStatus(ctx, org, err)
 		return ctrl.Result{}, err
 	}
 
 	// Update if needed
 	if needUpdate {
 		if err = r.Update(ctx, org); err != nil {
+			r.setStatus(ctx, org, err)
 			return ctrl.Result{}, err
 		}
 	}
+
+	r.setStatus(ctx, org, nil)
+
 	return ctrl.Result{}, nil
 }
 
@@ -122,88 +124,29 @@ func (r *OrganizationReconciler) reconcileDelete(ctx context.Context, org *quayi
 	return ctrl.Result{}, nil
 }
 
-func (r *OrganizationReconciler) setNotReady(
-	ctx context.Context,
-	org *quayiov1alpha.Organization,
-	reason string,
-	message string,
-) error {
-	meta.SetStatusCondition(&org.Status.Conditions, metav1.Condition{
-		Type:               "Ready",
-		Status:             metav1.ConditionFalse,
-		Reason:             reason,
-		Message:            message,
-		LastTransitionTime: metav1.Now(),
-	})
-
-	err := r.Status().Update(ctx, org)
-	if errors.IsNotFound(err) {
-		return nil
-	}
-	return err
-}
-
-func (r *OrganizationReconciler) setReady(
-	ctx context.Context,
-	org *quayiov1alpha.Organization,
-	reason string,
-	message string,
-) error {
-	meta.SetStatusCondition(&org.Status.Conditions, metav1.Condition{
-		Type:               "Ready",
-		Status:             metav1.ConditionTrue,
-		Reason:             reason,
-		Message:            message,
-		LastTransitionTime: metav1.Now(),
-	})
-
-	err := r.Status().Update(ctx, org)
-	if errors.IsNotFound(err) {
-		return nil
-	}
-	return err
-}
-
-func conditionFromQuayError(err error) (string, string) {
-	apiErr, ok := err.(*quay.APIError)
-	if !ok {
-		return "QuayRequestFailed", err.Error()
+func (r *OrganizationReconciler) setStatus(ctx context.Context, organization *quayiov1alpha.Organization, err error) {
+	// if err is nil, set status to Ready success
+	if err == nil {
+		SetCondition(
+			&organization.Status.Conditions,
+			organization.Generation,
+			metav1.ConditionTrue,
+			ReasonReconcileSuccess,
+			"Reconciliation successful",
+		)
+	} else {
+		SetCondition(
+			&organization.Status.Conditions,
+			organization.Generation,
+			metav1.ConditionFalse,
+			GetErrorReason(err),
+			err.Error(),
+		)
 	}
 
-	reason := "QuayInvalidRequest"
-	if apiErr.ErrorType != "" {
-		reason = "Quay" + toReasonPart(apiErr.ErrorType)
+	if statusErr := r.Status().Update(ctx, organization); statusErr != nil {
+		logf.Log.Error(statusErr, "Unable to update Organization status", "name", organization.Name)
 	}
-
-	message := apiErr.Detail
-	if message == "" {
-		message = apiErr.ErrorMessage
-	}
-	if message == "" {
-		message = apiErr.Error()
-	}
-
-	return reason, message
-}
-
-func toReasonPart(input string) string {
-	result := make([]rune, 0, len(input))
-	capitalizeNext := true
-	for _, r := range input {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
-			if capitalizeNext && r >= 'a' && r <= 'z' {
-				r = r - 'a' + 'A'
-			}
-			result = append(result, r)
-			capitalizeNext = false
-			continue
-		}
-		capitalizeNext = true
-	}
-	if len(result) == 0 {
-		return "RequestFailed"
-	}
-	return string(result)
 }
 
 // SetupWithManager sets up the controller with the Manager.

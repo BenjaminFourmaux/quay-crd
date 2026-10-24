@@ -7,13 +7,23 @@ import (
 
 // QuayConfigSpec defines the desired state of QuayConfig
 type QuayConfigSpec struct {
-	URL         string          `json:"url"` // URL of the Quay API
+	// URL of the Quay API
+	// +required
+	URL string `json:"url"`
+
+	// Credentials is a reference to a Kubernetes Secret that contains the Quay API credentials
+	// +required
 	Credentials SecretReference `json:"credentials"`
 }
 
 type SecretReference struct {
+	// Name of the Kubernetes Secret
+	// +required
 	Name string `json:"name"`
-	Key  string `json:"key"`
+
+	// Key of the secret data that contains the Quay API token
+	// +required
+	Key string `json:"key"`
 }
 
 type QuayConfigStatus struct {
