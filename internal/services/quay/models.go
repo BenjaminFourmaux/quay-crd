@@ -93,3 +93,40 @@ type Member struct {
 }
 
 // </editor-fold>
+
+// <editor-fold desc="Repository">
+
+type Repository struct {
+	Namespace      string `json:"namespace"`
+	Name           string `json:"name"`
+	Description    string `json:"description"`
+	Kind           string `json:"kind"`
+	State          string `json:"state"`
+	IsPublic       bool   `json:"is_public"`
+	IsStarred      bool   `json:"is_starred"`
+	IsOrganization bool   `json:"is_organization"`
+	StatusToken    string `json:"status_token"`
+	TrustEnabled   bool   `json:"trust_enabled"`
+	TagExpirationS int    `json:"tag_expiration_s"`
+	IsFreeAccount  bool   `json:"is_free_account"`
+	CanWrite       bool   `json:"can_write"`
+	CanAdmin       bool   `json:"can_admin"`
+}
+
+type CreateRepository struct {
+	Repository  string `json:"repository"` // Name of the repo
+	Visibility  string `json:"visibility"`
+	Namespace   string `json:"namespace"`
+	Description string `json:"description"`
+	RepoKind    string `json:"repo_kind"`
+}
+
+type UpdateRepository struct {
+	Description *string `json:"description,omitempty"`
+}
+
+type ChangeRepositoryVisibility struct {
+	Visibility string `json:"visibility"`
+}
+
+// </editor-folc>

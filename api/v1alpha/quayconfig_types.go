@@ -13,6 +13,7 @@ type QuayConfigSpec struct {
 
 	// Credentials is a reference to a Kubernetes Secret that contains the Quay API credentials
 	// +required
+	// +kubebuilder:validation:XValidation:rule="has(self.key)",message="key is required for Quay API credentials"
 	Credentials SecretReference `json:"credentials"`
 }
 

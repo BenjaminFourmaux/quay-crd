@@ -54,6 +54,9 @@ spec:
                 - key
                 - name
                 type: object
+                x-kubernetes-validations:
+                - message: key is required for Quay API credentials
+                  rule: has(self.key)
               url:
                 description: URL of the Quay API
                 type: string

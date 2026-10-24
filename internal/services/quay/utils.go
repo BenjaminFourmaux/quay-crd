@@ -75,3 +75,24 @@ func ParseMembers(body []byte) ([]Member, error) {
 
 	return rawMembers.Members, nil
 }
+
+func ParseRepositories(body []byte) ([]Repository, error) {
+	var rawRepositories struct {
+		Repositories []Repository `json:"repositories"`
+	}
+
+	if err := json.Unmarshal(body, &rawRepositories); err != nil {
+		return []Repository{}, err
+	}
+
+	return rawRepositories.Repositories, nil
+}
+
+func ParseRepository(body []byte) (Repository, error) {
+	var repo Repository
+
+	if err := json.Unmarshal(body, &repo); err != nil {
+		return Repository{}, err
+	}
+	return repo, nil
+}

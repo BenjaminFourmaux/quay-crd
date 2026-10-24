@@ -1,0 +1,23 @@
+apiVersion: quay.io/v1alpha
+kind: Repository
+metadata:
+  labels:
+    app.kubernetes.io/name: quay-crd
+    app.kubernetes.io/managed-by: kustomize
+  name: repository-sample
+spec:
+  name: organization-sample/repository-sample
+  visibility: private
+  mirroring:
+    registryLocation: quay.io/example/source
+    tags:
+      - latest
+    credentials:
+      usernameFrom:
+        secretKeyRef:
+          name: registry-credentials
+          key: username
+      passwordFrom:
+        secretKeyRef:
+          name: registry-credentials
+          key: password

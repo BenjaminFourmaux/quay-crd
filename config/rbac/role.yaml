@@ -18,6 +18,7 @@ rules:
   - groups
   - organizations
   - quayconfigs
+  - repositories
   - teams
   verbs:
   - create
@@ -33,6 +34,7 @@ rules:
   - groups/finalizers
   - organizations/finalizers
   - quayconfigs/finalizers
+  - repositories/finalizers
   - teams/finalizers
   verbs:
   - update
@@ -42,6 +44,7 @@ rules:
   - groups/status
   - organizations/status
   - quayconfigs/status
+  - repositories/status
   - teams/status
   verbs:
   - get
