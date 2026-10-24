@@ -40,6 +40,7 @@ spec:
             description: spec defines the desired state of Group
             properties:
               members:
+                description: Members is a list of username that belong to the group
                 items:
                   type: string
                 type: array

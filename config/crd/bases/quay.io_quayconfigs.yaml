@@ -40,16 +40,22 @@ spec:
             description: spec defines the desired state of QuayConfig
             properties:
               credentials:
+                description: Credentials is a reference to a Kubernetes Secret that
+                  contains the Quay API credentials
                 properties:
                   key:
+                    description: Key of the secret data that contains the Quay API
+                      token
                     type: string
                   name:
+                    description: Name of the Kubernetes Secret
                     type: string
                 required:
                 - key
                 - name
                 type: object
               url:
+                description: URL of the Quay API
                 type: string
             required:
             - credentials
