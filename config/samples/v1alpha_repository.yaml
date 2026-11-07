@@ -9,9 +9,11 @@ spec:
   name: organization-sample/repository-sample
   visibility: private
   mirroring:
-    registryLocation: quay.io/example/source
+    registryLocation: "docker.io/traefik"
     tags:
-      - latest
+      - v3.7.17
+    syncInterval: 2m
+    robotUser: "organization-sample+gpt"
     credentials:
       usernameFrom:
         secretKeyRef:
@@ -21,3 +23,5 @@ spec:
         secretKeyRef:
           name: registry-credentials
           key: password
+    verifyTLS: true
+    acceptUnsignedImages: true

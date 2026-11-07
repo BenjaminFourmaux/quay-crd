@@ -44,14 +44,14 @@ func (c *Client) GetRepositoryMirror(repoName string) (RepositoryMirror, error) 
 	return mirror, nil
 }
 
-func (c *Client) CreateRepositoryMirror(repoName string, mirrorToCreate RepositoryMirror) (RepositoryMirror, error) {
+func (c *Client) CreateRepositoryMirror(repoName string, mirrorToCreate CreateRepositoryMirror) (RepositoryMirror, error) {
 	// prepare body
 	body, err := json.Marshal(mirrorToCreate)
 	if err != nil {
 		return RepositoryMirror{}, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, c.BaseURL+"/api/"+c.APIVersion+"/repository", bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, c.BaseURL+"/api/"+c.APIVersion+"/repository/"+repoName+"/mirror", bytes.NewBuffer(body))
 	if err != nil {
 		return RepositoryMirror{}, err
 	}
@@ -73,7 +73,7 @@ func (c *Client) CreateRepositoryMirror(repoName string, mirrorToCreate Reposito
 	if resp.StatusCode != http.StatusCreated {
 		return RepositoryMirror{}, parseAPIError(resp)
 	} else {
-		// Get the created repo
+		// Get the created repositoryMirror
 		return c.GetRepositoryMirror(repoName)
 	}
 }

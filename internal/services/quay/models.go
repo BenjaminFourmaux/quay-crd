@@ -137,7 +137,7 @@ type RepositoryMirror struct {
 	IsEnabled                bool                   `json:"is_enabled"`
 	MirrorType               string                 `json:"mirror_type"`
 	ExternalReference        string                 `json:"external_reference"`
-	ExternalRegistryUsername *string                `json:"external_registry_name"`
+	ExternalRegistryUsername *string                `json:"external_registry_username"`
 	ExternalRegistryPassword *string                `json:"external_registry_password,omitempty"`
 	ExternalRegistryConfig   ExternalRegistryConfig `json:"external_registry_config"`
 	SyncInterval             int                    `json:"sync_interval"`   // In seconds
@@ -147,6 +147,17 @@ type RepositoryMirror struct {
 	SyncStatus               string                 `json:"sync_status"`
 	RootRule                 RootRule               `json:"root_rule"`
 	RobotUsername            string                 `json:"robot_username"` // Full name of the robot account
+}
+
+type CreateRepositoryMirror struct {
+	ExternalReference        string                 `json:"external_reference"`
+	ExternalRegistryUsername *string                `json:"external_registry_username"`
+	ExternalRegistryPassword *string                `json:"external_registry_password,omitempty"`
+	SyncInterval             int                    `json:"sync_interval"`   // In seconds
+	SyncStartDate            string                 `json:"sync_start_date"` // in format yyyy-mm-ddTHH:MM:ssZ
+	RobotUsername            string                 `json:"robot_username"`  // Full name of the robot account
+	ExternalRegistryConfig   ExternalRegistryConfig `json:"external_registry_config"`
+	RootRule                 RootRule               `json:"root_rule"`
 }
 
 type ExternalRegistryConfig struct {

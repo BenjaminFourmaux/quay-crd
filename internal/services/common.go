@@ -1,5 +1,7 @@
 package services
 
+import "time"
+
 func uniqueStrings(values []string) []string {
 	seen := make(map[string]struct{}, len(values))
 	unique := make([]string, 0, len(values))
@@ -45,4 +47,16 @@ func reconcileList(desired, current []string) (toAdd, toRemove []string) {
 		}
 	}
 	return
+}
+
+/*
+setDefaultDateTimeNow sets the default date time to now if it is nil and returns the date time string.
+In format: yyyy-mm-ddTHH:MM:SSZ
+*/
+func setDefaultDateTimeNow(dateTime **string) string {
+	if *dateTime == nil {
+		now := time.Now().Format(time.RFC3339)
+		*dateTime = &now
+	}
+	return **dateTime
 }

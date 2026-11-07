@@ -98,26 +98,37 @@ func (s *RepositoryService) create(ctx context.Context, repository *quayiov1alph
 
 	// Create the mirroring
 	if repository.Spec.Mirroring != nil {
+		logf.Log.Info("[Repository Service] Creating mirroring repository", "name", repository.Spec.Name)
+
+		// Change repoState for enable mirroring
+		err = s.QuayClientMgr.Get().ChangeRepositoryState(repository.Spec.Name, "MIRROR")
+		if err != nil {
+			logf.Log.Error(err, "[Repository Service] Error when updating repository state", "name", repository.Spec.Name, "state", "MIRROR")
+			return err
+		} else {
+			logf.Log.Info("[Repository Service] Repository successfully updated state", "name", repository.Spec.Name, "state", "MIRROR")
+		}
+
 		externalRegistryUsername, externalRegistryPassword, err := s.resolveMirroringCredentials(ctx, repository)
 		if err != nil {
 			return err
 		}
 
 		// Prepare the model
-		repositoryMirrorToCreate := quay.RepositoryMirror{
+		repositoryMirrorToCreate := quay.CreateRepositoryMirror{
 			ExternalReference:        repository.Spec.Mirroring.RegistryLocation,
 			ExternalRegistryUsername: externalRegistryUsername,
 			ExternalRegistryPassword: externalRegistryPassword,
 			SyncInterval:             syncIntervalInSeconds(repository.Spec.Mirroring.SyncInterval),
-			SyncStartDate:            repository.Spec.Mirroring.StartDate,
+			SyncStartDate:            setDefaultDateTimeNow(&repository.Spec.Mirroring.StartDate),
 			RobotUsername:            repository.Spec.Mirroring.RobotUser,
 			ExternalRegistryConfig: quay.ExternalRegistryConfig{
 				VerifyTLS:      repository.Spec.Mirroring.VerifyTLS,
 				UnsignedImages: repository.Spec.Mirroring.AcceptUnsignedImages,
 				Proxy: quay.Proxy{
-					HttpProxy:  &repository.Spec.Mirroring.HttpProxy,
-					HttpsProxy: &repository.Spec.Mirroring.HttpsProxy,
-					NoProxy:    &repository.Spec.Mirroring.NoProxy,
+					HttpProxy:  repository.Spec.Mirroring.HttpProxy,
+					HttpsProxy: repository.Spec.Mirroring.HttpsProxy,
+					NoProxy:    repository.Spec.Mirroring.NoProxy,
 				},
 			},
 			RootRule: quay.RootRule{

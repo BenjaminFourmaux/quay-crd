@@ -64,7 +64,7 @@ type RepositoryMirroring struct {
 
 	// StartDate to sync images
 	// +optional
-	StartDate string `json:"startDate,omitempty"`
+	StartDate *string `json:"startDate,omitempty"`
 
 	// SyncInterval to sync images. s for seconds, m for minutes, h for hours, d for days, w for weeks
 	// +optional
@@ -91,15 +91,15 @@ type RepositoryMirroring struct {
 
 	// HttpProxy
 	// +optional
-	HttpProxy string `json:"httpProxy,omitempty"`
+	HttpProxy *string `json:"httpProxy,omitempty"`
 
 	// HttpsProxy
 	// +optional
-	HttpsProxy string `json:"httpsProxy,omitempty"`
+	HttpsProxy *string `json:"httpsProxy,omitempty"`
 
 	// NoProxy
 	// +optional
-	NoProxy string `json:"noProxy,omitempty"`
+	NoProxy *string `json:"noProxy,omitempty"`
 }
 
 // +kubebuilder:validation:XValidation:rule="(has(self.username) != has(self.usernameFrom)) && (has(self.password) != has(self.passwordFrom))",message="specify either a literal value or a valueFrom source for both username and password"
