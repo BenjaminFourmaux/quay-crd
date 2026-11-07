@@ -53,6 +53,10 @@ type RepositorySpec struct {
 }
 
 type RepositoryMirroring struct {
+	// Enable or disable the mirroring sync
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+
 	// RegistryLocation Address of the repository to mirror
 	// +required
 	RegistryLocation string `json:"registryLocation"`

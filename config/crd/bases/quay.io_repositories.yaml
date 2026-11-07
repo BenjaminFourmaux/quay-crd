@@ -181,6 +181,9 @@ spec:
                         for both username and password
                       rule: (has(self.username) != has(self.usernameFrom)) && (has(self.password)
                         != has(self.passwordFrom))
+                  enabled:
+                    description: Enable or disable the mirroring sync
+                    type: boolean
                   httpProxy:
                     description: HttpProxy
                     type: string

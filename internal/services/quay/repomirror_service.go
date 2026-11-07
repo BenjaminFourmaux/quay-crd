@@ -77,3 +77,36 @@ func (c *Client) CreateRepositoryMirror(repoName string, mirrorToCreate CreateRe
 		return c.GetRepositoryMirror(repoName)
 	}
 }
+
+func (c *Client) UpdateRepositoryMirror(repoName string, body map[string]interface{}) (RepositoryMirror, error) {
+	// prepare body
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return RepositoryMirror{}, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, c.BaseURL+"/api/"+c.APIVersion+"/repository/"+repoName+"/mirror", bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return RepositoryMirror{}, err
+	}
+
+	logf.Log.Info("[Quay] Sending request", "method", req.Method, "url", req.URL.String())
+
+	req.Header.Set("Authorization", "Bearer "+c.Token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return RepositoryMirror{}, err
+	}
+
+	logf.Log.Info("[Quay] Request response", "status", resp.Status)
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return RepositoryMirror{}, parseAPIError(resp)
+	}
+
+	return c.GetRepositoryMirror(repoName)
+}
