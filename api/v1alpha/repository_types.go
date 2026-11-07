@@ -49,7 +49,7 @@ type RepositorySpec struct {
 
 	// Mirroring parameters
 	// +optional
-	Mirroring RepositoryMirroring `json:"mirroring,omitempty"`
+	Mirroring *RepositoryMirroring `json:"mirroring,omitempty"`
 }
 
 type RepositoryMirroring struct {

@@ -96,3 +96,12 @@ func ParseRepository(body []byte) (Repository, error) {
 	}
 	return repo, nil
 }
+
+func ParseRepositoryMirror(body []byte) (RepositoryMirror, error) {
+	var repoMirror RepositoryMirror
+
+	if err := json.Unmarshal(body, &repoMirror); err != nil {
+		return RepositoryMirror{}, err
+	}
+	return repoMirror, nil
+}
