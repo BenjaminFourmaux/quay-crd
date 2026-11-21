@@ -40,10 +40,17 @@ spec:
             description: spec defines the desired state of Organization
             properties:
               email:
+                description: Email is the contact email for the organization
+                format: email
                 type: string
               invoice_email:
                 type: boolean
               tag_expiration_s:
+                default: 1209600
+                description: TagExpirationS is the namespace-level tag expiration
+                  in seconds. 0 disables expiration; otherwise positive duration in
+                  seconds.
+                minimum: 0
                 type: integer
             type: object
           status:

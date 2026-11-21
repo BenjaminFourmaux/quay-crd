@@ -80,8 +80,6 @@ func (s *OrganizationService) Delete(ctx context.Context, organization *quayiov1
 		return err
 	}
 
-	// TODO: remove associated Teams from Kubernetes
-
 	return nil
 }
 

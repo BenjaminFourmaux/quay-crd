@@ -4,4 +4,5 @@ resources:
 - v1alpha_quayconfig.yaml
 - v1alpha_team.yaml
 - v1alpha_group.yaml
+- v1alpha_repository.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

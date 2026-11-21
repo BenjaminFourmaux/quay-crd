@@ -36,12 +36,12 @@ type TeamSpec struct {
 
 	// Role of the team within the organization
 	// +required
-	// +kubebuilder:validation:Enum=admin;member;viewer
+	// +kubebuilder:validation:Enum=admin;member;creator
 	Role string `json:"role"`
 
 	// Members of the team
 	// +optional
-	Members []string `json:"members"`
+	Members []string `json:"members,omitempty"`
 
 	// Groups that the team belongs to
 	// +optional

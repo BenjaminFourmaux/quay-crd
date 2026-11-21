@@ -93,3 +93,88 @@ type Member struct {
 }
 
 // </editor-fold>
+
+// <editor-fold desc="Repository">
+
+type Repository struct {
+	Namespace      string `json:"namespace"`
+	Name           string `json:"name"`
+	Description    string `json:"description"`
+	Kind           string `json:"kind"`
+	State          string `json:"state"`
+	IsPublic       bool   `json:"is_public"`
+	IsStarred      bool   `json:"is_starred"`
+	IsOrganization bool   `json:"is_organization"`
+	StatusToken    string `json:"status_token"`
+	TrustEnabled   bool   `json:"trust_enabled"`
+	TagExpirationS int    `json:"tag_expiration_s"`
+	IsFreeAccount  bool   `json:"is_free_account"`
+	CanWrite       bool   `json:"can_write"`
+	CanAdmin       bool   `json:"can_admin"`
+}
+
+type CreateRepository struct {
+	Repository  string `json:"repository"` // Name of the repo
+	Visibility  string `json:"visibility"`
+	Namespace   string `json:"namespace"`
+	Description string `json:"description"`
+	RepoKind    string `json:"repo_kind"`
+}
+
+type UpdateRepository struct {
+	Description *string `json:"description,omitempty"`
+}
+
+type ChangeRepositoryVisibility struct {
+	Visibility string `json:"visibility"`
+}
+
+// </editor-fold>
+
+// <editor-fold desc="RepositoryMirror">
+
+type RepositoryMirror struct {
+	IsEnabled                bool                   `json:"is_enabled"`
+	MirrorType               string                 `json:"mirror_type"`
+	ExternalReference        string                 `json:"external_reference"`
+	ExternalRegistryUsername *string                `json:"external_registry_username"`
+	ExternalRegistryPassword *string                `json:"external_registry_password,omitempty"`
+	ExternalRegistryConfig   ExternalRegistryConfig `json:"external_registry_config"`
+	SyncInterval             int                    `json:"sync_interval"`   // In seconds
+	SyncStartDate            string                 `json:"sync_start_date"` // in format yyyy-mm-ddTHH:MM:ssZ
+	SyncExpirationDate       *string                `json:"sync_expiration_date"`
+	SyncRetriesRemaining     int                    `json:"sync_retries_remaining"` // By default, 3
+	SyncStatus               string                 `json:"sync_status"`
+	RootRule                 RootRule               `json:"root_rule"`
+	RobotUsername            string                 `json:"robot_username"` // Full name of the robot account
+}
+
+type CreateRepositoryMirror struct {
+	ExternalReference        string                 `json:"external_reference"`
+	ExternalRegistryUsername *string                `json:"external_registry_username"`
+	ExternalRegistryPassword *string                `json:"external_registry_password,omitempty"`
+	SyncInterval             int                    `json:"sync_interval"`   // In seconds
+	SyncStartDate            string                 `json:"sync_start_date"` // in format yyyy-mm-ddTHH:MM:ssZ
+	RobotUsername            string                 `json:"robot_username"`  // Full name of the robot account
+	ExternalRegistryConfig   ExternalRegistryConfig `json:"external_registry_config"`
+	RootRule                 RootRule               `json:"root_rule"`
+}
+
+type ExternalRegistryConfig struct {
+	VerifyTLS      bool  `json:"verify_tls"`
+	UnsignedImages bool  `json:"unsigned_images"`
+	Proxy          Proxy `json:"proxy"`
+}
+
+type Proxy struct {
+	HttpProxy  *string `json:"http_proxy"`
+	HttpsProxy *string `json:"https_proxy"`
+	NoProxy    *string `json:"no_proxy"`
+}
+
+type RootRule struct {
+	RuleKind  string   `json:"rule_kind"`
+	RuleValue []string `json:"rule_value"`
+}
+
+// </editor-fold>
