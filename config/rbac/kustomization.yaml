@@ -53,3 +53,11 @@ resources:
 - repository_editor_role.yaml
 - repository_viewer_role.yaml
 
+# For each CRD, "Admin", "Editor" and "Viewer" roles are scaffolded by
+# default, aiding admins in cluster management. Those roles are
+# not used by the quay-crd itself. You can comment the following lines
+# if you do not want those helpers be installed with your Project.
+- robotaccount_admin_role.yaml
+- robotaccount_editor_role.yaml
+- robotaccount_viewer_role.yaml
+

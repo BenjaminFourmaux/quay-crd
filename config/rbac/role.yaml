@@ -9,8 +9,12 @@ rules:
   resources:
   - secrets
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - quay.io
@@ -19,6 +23,7 @@ rules:
   - organizations
   - quayconfigs
   - repositories
+  - robotaccounts
   - teams
   verbs:
   - create
@@ -35,6 +40,7 @@ rules:
   - organizations/finalizers
   - quayconfigs/finalizers
   - repositories/finalizers
+  - robotaccounts/finalizers
   - teams/finalizers
   verbs:
   - update
@@ -45,6 +51,7 @@ rules:
   - organizations/status
   - quayconfigs/status
   - repositories/status
+  - robotaccounts/status
   - teams/status
   verbs:
   - get

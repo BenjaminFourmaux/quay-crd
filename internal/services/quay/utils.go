@@ -105,3 +105,12 @@ func ParseRepositoryMirror(body []byte) (RepositoryMirror, error) {
 	}
 	return repoMirror, nil
 }
+
+func ParseRobotAccount(body []byte) (RobotAccount, error) {
+	var robotAccount RobotAccount
+
+	if err := json.Unmarshal(body, &robotAccount); err != nil {
+		return RobotAccount{}, err
+	}
+	return robotAccount, nil
+}

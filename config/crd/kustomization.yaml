@@ -7,6 +7,7 @@ resources:
 - bases/quay.io_teams.yaml
 - bases/quay.io_groups.yaml
 - bases/quay.io_repositories.yaml
+- bases/quay.io_robotaccounts.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

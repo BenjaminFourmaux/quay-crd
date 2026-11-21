@@ -1,0 +1,30 @@
+apiVersion: quay.io/v1alpha
+kind: RobotAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: quay-crd
+    app.kubernetes.io/managed-by: kustomize
+  name: benjamin-myrobot
+spec:
+  name: myrobot
+  description: "just a little robot"
+  owner:
+    kind: user
+    name: benjamin
+  secret: {}
+---
+apiVersion: quay.io/v1alpha
+kind: RobotAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: quay-crd
+    app.kubernetes.io/managed-by: kustomize
+  name: organization-sample-contentid
+spec:
+  name: contentid
+  description: "for delete all old musics"
+  owner:
+    kind: organization
+    name: organization-sample
+  secret:
+    name: organization-contentid-pull
