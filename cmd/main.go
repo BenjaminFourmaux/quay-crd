@@ -187,6 +187,7 @@ func main() {
 	teamService := services.NewTeamService(mgr.GetClient(), configService.QuayClient, mgr.GetScheme())
 	groupService := services.NewGroupService(mgr.GetClient(), configService.QuayClient, mgr.GetScheme())
 	repositoryService := services.NewRepositoryService(mgr.GetClient(), configService.QuayClient, mgr.GetScheme())
+	robotAccountService := services.NewRobotAccountService(mgr.GetClient(), configService.QuayClient, mgr.GetScheme())
 
 	if err := (&controller.QuayConfigReconciler{
 		Client:        mgr.GetClient(),
@@ -227,6 +228,14 @@ func main() {
 		RepositoryService: repositoryService,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "repository")
+		os.Exit(1)
+	}
+	if err := (&controller.RobotAccountReconciler{
+		Client:              mgr.GetClient(),
+		Scheme:              mgr.GetScheme(),
+		RobotAccountService: robotAccountService,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "Failed to create controller", "controller", "robotaccount")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

@@ -178,3 +178,21 @@ type RootRule struct {
 }
 
 // </editor-fold>
+
+// <editor-fold desc="Robot Account">
+
+type RobotAccount struct {
+	Name                 string   `json:"name"`
+	Created              string   `json:"created"`
+	LastAccessed         string   `json:"last_accessed"`
+	Description          string   `json:"description"`
+	Token                string   `json:"token"`
+	UnstructuredMetadata struct{} `json:"unstructured_metadata"`
+}
+
+type CreateRobotAccount struct {
+	Description          string   `json:"description"`
+	UnstructuredMetadata struct{} `json:"unstructured_metadata"`
+}
+
+// </editor-fold>

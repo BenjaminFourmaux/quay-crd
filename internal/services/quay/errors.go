@@ -18,6 +18,10 @@ type APIError struct {
 	Status       int    `json:"status"`
 }
 
+type AlternativeError struct {
+	Message string `json:"message"`
+}
+
 func (e *APIError) Error() string {
 	message := e.Detail
 	if message == "" {
@@ -55,6 +59,13 @@ func parseAPIError(resp *http.Response) error {
 		return &apiErr
 	}
 
+	var altErr AlternativeError
+	if err := json.Unmarshal(body, &altErr); err == nil && altErr.Message != "" {
+		if altErr.Message == "Could not find robot with specified username" {
+			return ErrRobotAccountNotFound
+		}
+	}
+
 	trimmedBody := strings.TrimSpace(string(body))
 
 	if baseErr := errorForStatus(resp.StatusCode); baseErr != nil {
@@ -90,9 +101,10 @@ func errorForStatus(status int) error {
 }
 
 var (
-	ErrNotFound     = errors.New("resource not found")
-	ErrUnauthorized = errors.New("unauthorized")
-	ErrForbidden    = errors.New("forbidden")
-	ErrBadRequest   = errors.New("bad request")
-	ErrConflict     = errors.New("conflict")
+	ErrNotFound             = errors.New("resource not found")
+	ErrUnauthorized         = errors.New("unauthorized")
+	ErrForbidden            = errors.New("forbidden")
+	ErrBadRequest           = errors.New("bad request")
+	ErrConflict             = errors.New("conflict")
+	ErrRobotAccountNotFound = errors.New("robot account not found")
 )

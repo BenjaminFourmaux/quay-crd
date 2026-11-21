@@ -49,4 +49,12 @@ resources:
   kind: Repository
   path: quay-crd/api/v1alpha
   version: v1alpha
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: quay.io
+  kind: RobotAccount
+  path: quay-crd/api/v1alpha
+  version: v1alpha
 version: "3"

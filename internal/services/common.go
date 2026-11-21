@@ -1,6 +1,17 @@
 package services
 
-import "time"
+import (
+	"encoding/base64"
+	"time"
+)
+
+type DockerConfig struct {
+	Auths map[string]DockerAuthConfig `json:"auths"`
+}
+
+type DockerAuthConfig struct {
+	Auth string `json:"auth"`
+}
 
 func uniqueStrings(values []string) []string {
 	seen := make(map[string]struct{}, len(values))
@@ -59,4 +70,8 @@ func setDefaultDateTimeNow(dateTime **string) string {
 		*dateTime = &now
 	}
 	return **dateTime
+}
+
+func base64Encode(str string) string {
+	return base64.StdEncoding.EncodeToString([]byte(str))
 }
